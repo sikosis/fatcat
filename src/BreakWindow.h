@@ -20,7 +20,10 @@ public:
 	void SetCountdown(const BString& value);
 
 private:
+	void _SendAction(uint32 what);
+
 	bool fPreview;
+	bool fActionSent;
 	int32 fPreviewSeconds;
 	bigtime_t fPreviewDeadline;
 	BStringView* fCountdown;

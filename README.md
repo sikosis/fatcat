@@ -1,4 +1,4 @@
-# Fat Cat Pomodoro for Haiku
+# Fat Cat Pomodoro v0.07 for Haiku
 
 <p align="center">
   <img src="artwork/fatcat-icon.svg" alt="Fat Cat icon" width="128" height="128">
@@ -76,7 +76,8 @@ The **Cats** tab shows collection progress. Names save when Enter is pressed or 
 
 Breaks and previews cover the selected screen with a snapshot-backed scene, so
 the cats appear to walk over the desktop without requiring window transparency.
-The control panel stays near the top-right Deskbar area. **Keep break overlay in
+Fat Cat hides its settings window before taking that snapshot. The control panel
+stays near the top-right Deskbar area. **Keep break overlay in
 front** makes real breaks modal; when disabled, another application can still be
 activated normally. Haiku system shortcuts remain available in either mode.
 

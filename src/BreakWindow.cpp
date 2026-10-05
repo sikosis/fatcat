@@ -25,6 +25,7 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 		B_ASYNCHRONOUS_CONTROLS | B_NOT_CLOSABLE | B_NOT_ZOOMABLE
 			| B_NOT_MINIMIZABLE | B_NOT_MOVABLE | B_NOT_RESIZABLE),
 	fPreview(preview),
+	fActionSent(false),
 	fPreviewSeconds(15),
 	fPreviewDeadline(system_time() + 15000000),
 	fCountdown(nullptr)
@@ -96,11 +97,23 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
+void
+BreakWindow::_SendAction(uint32 what)
+{
+	if (fActionSent)
+		return;
+	fActionSent = true;
+	Hide();
+	BMessage message(what);
+	be_app->PostMessage(&message);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
 bool
 BreakWindow::QuitRequested()
 {
-	BMessage message(fPreview ? kMsgDismiss : kMsgSkipBreak);
-	be_app->PostMessage(&message);
+	_SendAction(fPreview ? kMsgDismiss : kMsgSkipBreak);
 	return false;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
@@ -111,7 +124,7 @@ BreakWindow::MessageReceived(BMessage* message)
 {
 	if (message->what == kMsgDismiss || message->what == kMsgSkipBreak
 		|| message->what == kMsgPauseResume) {
-		be_app->PostMessage(message);
+		_SendAction(message->what);
 		return;
 	}
 	if (message->what == kPreviewTick) {
@@ -120,10 +133,8 @@ BreakWindow::MessageReceived(BMessage* message)
 		char text[16];
 		snprintf(text, sizeof(text), "00:%02ld", (long)fPreviewSeconds);
 		fCountdown->SetText(text);
-		if (fPreviewSeconds == 0) {
-			BMessage dismiss(kMsgDismiss);
-			be_app->PostMessage(&dismiss);
-		}
+		if (fPreviewSeconds == 0)
+			_SendAction(kMsgDismiss);
 		return;
 	}
 	BWindow::MessageReceived(message);

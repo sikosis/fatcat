@@ -47,7 +47,7 @@ main(int argc, char** argv)
 	BApplication application("application/x-vnd.arkane-FatCatControl");
 	if (argc < 2) { Usage(); return 2; }
 	if (strcmp(argv[1], "about") == 0 || strcmp(argv[1], "--about") == 0) {
-		printf("Fat Cat Pomodoro %s for Haiku\n%s\n", kAppVersion,
+		printf("Fat Cat Pomodoro v%s for Haiku\n%s\n", kAppVersion,
 			kAppDescription);
 		return 0;
 	}

@@ -11,6 +11,7 @@
 #include <FindDirectory.h>
 #include <IconUtils.h>
 #include <InterfaceDefs.h>
+#include <OS.h>
 #include <Path.h>
 #include <Resources.h>
 #include <Roster.h>
@@ -117,7 +118,7 @@ FatCatApp::_EnsureDeskbarItem()
 void
 FatCatApp::AboutRequested()
 {
-	BString aboutText("Fat Cat Pomodoro ");
+	BString aboutText("Fat Cat Pomodoro v");
 	aboutText << kAppVersion << " for Haiku\n\n";
 	aboutText << kAppDescription
 		<< "\n\nDesigned by Sikosis.\n"
@@ -206,8 +207,10 @@ FatCatApp::_ShowMain()
 }
 
 void
-FatCatApp::_CloseOverlays()
+FatCatApp::_CloseOverlays(bool restoreMain)
 {
+	bool showMain = restoreMain && fRestoreMainAfterOverlay;
+	fRestoreMainAfterOverlay = false;
 	for (BreakWindow* window : fBreakWindows) {
 		if (window->Lock()) {
 			window->Quit();
@@ -215,12 +218,28 @@ FatCatApp::_CloseOverlays()
 	}
 	fBreakWindows.clear();
 	fPreviewing = false;
+	if (showMain)
+		_ShowMain();
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
 FatCatApp::_ShowOverlay(bool preview)
 {
-	_CloseOverlays();
+	_CloseOverlays(false);
+	bool mainWasVisible = false;
+	if (fMainWindow && fMainWindow->Lock()) {
+		mainWasVisible = !fMainWindow->IsHidden();
+		if (mainWasVisible) {
+			fMainWindow->Hide();
+			fMainWindow->Sync();
+		}
+		fMainWindow->Unlock();
+	}
+	if (mainWasVisible)
+		snooze(50000);
+	fRestoreMainAfterOverlay = preview && mainWasVisible;
 	fPreviewing = preview;
 	BScreen screen;
 	int32 index = 1;
@@ -246,6 +265,8 @@ FatCatApp::_ShowOverlay(bool preview)
 		window->SetCountdown(fSession.Countdown(time(nullptr)));
 	}
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 bool FatCatApp::_Unlocked(int32 id) const
 {
@@ -326,7 +347,7 @@ FatCatApp::MessageReceived(BMessage* message)
 			bool completedBreak = false;
 			if (fSession.Tick(now, completedBreak)) {
 				if (before == Phase::Focus && fSession.phase == Phase::Break) {
-					_CloseOverlays(); // a real break supersedes a preview
+					_CloseOverlays(false); // a real break supersedes a preview
 					_ShowOverlay(false);
 				} else if (before == Phase::Break) {
 					_CloseOverlays();

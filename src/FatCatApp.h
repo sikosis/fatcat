@@ -29,7 +29,7 @@ private:
 	void _StateChanged();
 	void _ShowMain();
 	void _ShowOverlay(bool preview);
-	void _CloseOverlays();
+	void _CloseOverlays(bool restoreMain = true);
 	void _ReplyStatus(BMessage* request);
 	bool _Unlocked(int32 id) const;
 
@@ -40,5 +40,6 @@ private:
 	std::vector<BreakWindow*> fBreakWindows;
 	std::unique_ptr<BMessageRunner> fTicker;
 	bool fPreviewing = false;
+	bool fRestoreMainAfterOverlay = false;
 	bool fCommandLineOnly = false;
 };
