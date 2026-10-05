@@ -22,7 +22,7 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 	:
 	BWindow(frame, "Fat Cat break", B_NO_BORDER_WINDOW_LOOK,
 		blocking ? B_MODAL_APP_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL,
-		B_ASYNCHRONOUS_CONTROLS | B_NOT_CLOSABLE | B_NOT_ZOOMABLE
+		B_WILL_ACCEPT_FIRST_CLICK | B_NOT_CLOSABLE | B_NOT_ZOOMABLE
 			| B_NOT_MINIMIZABLE | B_NOT_MOVABLE | B_NOT_RESIZABLE),
 	fPreview(preview),
 	fActionSent(false),
@@ -64,9 +64,9 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 	prompt->SetAlignment(B_ALIGN_CENTER);
 	BButton* close = new BButton(preview ? "Close preview" : "Skip break",
 		new BMessage(preview ? kMsgDismiss : kMsgSkipBreak));
-	close->SetTarget(this);
+	close->SetTarget(be_app);
 	BButton* pause = new BButton("Pause timer", new BMessage(kMsgPauseResume));
-	pause->SetTarget(this);
+	pause->SetTarget(be_app);
 	if (preview)
 		pause->Hide();
 

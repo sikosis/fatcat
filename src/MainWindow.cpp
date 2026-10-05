@@ -22,7 +22,6 @@
 static constexpr uint32 kSave = 'save';
 static constexpr uint32 kSelectMonitor = 'smon';
 static constexpr uint32 kRenameBase = 'rn00';
-static constexpr uint32 kFavoriteBase = 'fv00';
 static const int32 kUnlocks[] = { 0, 1, 3, 6 };
 static const char* kPersonalities[] = {
 	"Sleepy · expert napper", "Curious · gentle explorer",
@@ -71,13 +70,13 @@ MainWindow::_BuildTimerTab()
 	fStatus = new BStringView("status", "Ready when you are.");
 	fStatus->SetFont(be_bold_font);
 	fPrimary = new BButton("Start focus", new BMessage(kMsgStart));
-	fPrimary->SetTarget(this);
+	fPrimary->SetTarget(be_app);
 	fStop = new BButton("Stop", new BMessage(kMsgStop));
-	fStop->SetTarget(this);
+	fStop->SetTarget(be_app);
 	BButton* preview = new BButton("Preview cats", new BMessage(kMsgPreview));
-	preview->SetTarget(this);
+	preview->SetTarget(be_app);
 	BButton* about = new BButton("About…", new BMessage(B_ABOUT_REQUESTED));
-	about->SetTarget(this);
+	about->SetTarget(be_app);
 
 	fFocus = new BTextControl("Focus:", "", nullptr);
 	fBreak = new BTextControl("Short break:", "", nullptr);
@@ -157,7 +156,10 @@ MainWindow::_BuildCatsTab(const Session&, const Preferences&)
 		fCatNames[i] = new BTextControl("Name:", "", new BMessage(kRenameBase + i));
 		fCatNames[i]->SetModificationMessage(new BMessage(kRenameBase + i));
 		fCatNames[i]->SetTarget(this);
-		fFavoriteButtons[i] = new BButton("☆ Favorite", new BMessage(kFavoriteBase + i));
+		BMessage* favorite = new BMessage(kMsgToggleFavorite);
+		favorite->AddInt32("id", i);
+		fFavoriteButtons[i] = new BButton("☆ Favorite", favorite);
+		fFavoriteButtons[i]->SetTarget(be_app);
 		layout.Add(new BSeparatorView(B_HORIZONTAL))
 			.Add(fCatNameLabels[i])
 			.Add(new BStringView(nullptr, kPersonalities[i]))
@@ -210,12 +212,6 @@ MainWindow::_SendSettings()
 void
 MainWindow::MessageReceived(BMessage* message)
 {
-	if (message->what == kMsgStart || message->what == kMsgPauseResume
-		|| message->what == kMsgStop || message->what == kMsgPreview
-		|| message->what == B_ABOUT_REQUESTED) {
-		be_app->PostMessage(message);
-		return;
-	}
 	if (message->what == kSave) { _SendSettings(); return; }
 	if (message->what == kSelectMonitor) {
 		const char* monitor;
@@ -229,12 +225,6 @@ MainWindow::MessageReceived(BMessage* message)
 		rename.AddInt32("id", id);
 		rename.AddString("name", fCatNames[id]->Text());
 		be_app->PostMessage(&rename);
-		return;
-	}
-	if (message->what >= kFavoriteBase && message->what < kFavoriteBase + 4) {
-		BMessage favorite(kMsgToggleFavorite);
-		favorite.AddInt32("id", message->what - kFavoriteBase);
-		be_app->PostMessage(&favorite);
 		return;
 	}
 	BWindow::MessageReceived(message);
@@ -267,7 +257,7 @@ MainWindow::_UpdateControls()
 	fPrimary->SetLabel(fSession.phase == Phase::Idle ? "Start focus"
 		: fSession.paused ? "Resume" : "Pause");
 	fPrimary->SetMessage(new BMessage(fSession.phase == Phase::Idle ? kMsgStart : kMsgPauseResume));
-	fPrimary->SetTarget(this);
+	fPrimary->SetTarget(be_app);
 	fStop->SetEnabled(fSession.phase != Phase::Idle);
 
 	if (!fSettingsInitialized) {
@@ -303,6 +293,5 @@ MainWindow::_UpdateControls()
 		fCatNames[i]->SetEnabled(unlocked);
 		fFavoriteButtons[i]->SetEnabled(unlocked);
 		fFavoriteButtons[i]->SetLabel(fPreferences.IsFavorite(i) ? "★ Favorite" : "☆ Favorite");
-		fFavoriteButtons[i]->SetTarget(this);
 	}
 }

@@ -253,6 +253,7 @@ FatCatApp::_ShowOverlay(bool preview)
 			fSession.completedBreaks, preview, fPreferences.blockingBreak && !preview);
 		fBreakWindows.push_back(window);
 		window->Show();
+		window->Activate();
 		window->SetCountdown(fSession.Countdown(time(nullptr)));
 	} while (screen.SetToNext() == B_OK);
 	// Disconnected selection falls back to the first connected screen.
@@ -262,6 +263,7 @@ FatCatApp::_ShowOverlay(bool preview)
 			fSession.completedBreaks, preview, fPreferences.blockingBreak && !preview);
 		fBreakWindows.push_back(window);
 		window->Show();
+		window->Activate();
 		window->SetCountdown(fSession.Countdown(time(nullptr)));
 	}
 }
