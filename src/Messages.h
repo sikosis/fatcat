@@ -4,6 +4,7 @@
 
 constexpr const char* kAppSignature = "application/x-vnd.arkane-FatCat";
 constexpr const char* kAppName = "Fat Cat";
+constexpr const char* kAppVersion = "0.01";
 constexpr const char* kAppDescription
 	= "A cozy Pomodoro timer that fills your breaks with collectible animated cats.";
 constexpr const char* kDeskbarItemName = "FatCatDeskbar";

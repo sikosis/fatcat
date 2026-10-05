@@ -1,12 +1,16 @@
 # Fat Cat Pomodoro for Haiku
 
+<p align="center">
+  <img src="artwork/fatcat-icon.svg" alt="Fat Cat icon" width="128" height="128">
+</p>
+
 A cozy Pomodoro timer that fills your breaks with collectible animated cats.
 
-A native Haiku recreation of [Fat Cat Pomodoro](https://github.com/jeremielumandong/omarchy-fat-cat). It is a long-running `BApplication` with a real Deskbar add-on; no Qt, QML, Electron, account, or network connection is used at runtime.
+A native Haiku recreation of [Fat Cat Pomodoro](https://github.com/jeremielumandong/omarchy-fat-cat). It is a `BApplication` with a Deskbar add-on; no Qt, QML, Electron or other framework is used.
 
 ## Features
 
-- Focus, short-break, and long-break phases. Defaults are 25/5/15 minutes with a long break after every four completed focus sessions.
+- Focus, short-break, and long-break phases. Defaults are 25 minutes focus, 5 minutes short break, 15 minutes long break, and one long break after every 4 completed focus sessions.
 - A live Deskbar readout. Primary-click opens Fat Cat; secondary-click starts a safe 15-second preview.
 - The Deskbar item starts the timer service quietly at login and keeps it running after the settings window closes.
 - An original cat-and-Pomodoro HVIF icon is embedded in `fatcat.app` and displayed in its native About box.
@@ -42,6 +46,26 @@ quit Deskbar
 ```
 
 Deskbar is restarted automatically by Haiku. Launch `~/config/non-packaged/apps/FatCat/fatcat.app` directly if you want to open the settings window before restarting Deskbar.
+
+## Packaging
+
+HaikuPorts is the intended release format and produces a standard installable
+`.hpkg`. The recipe template is in
+[`packaging/haikuports/fatcat-0.01.recipe.in`](packaging/haikuports/fatcat-0.01.recipe.in).
+
+After publishing the GitHub repository and creating the `v0.01` tag, replace
+the template's `@HOMEPAGE@`, `@SOURCE_URI@`, `@CHECKSUM_SHA256@`, and
+`@SOURCE_DIR@` values. Copy the completed recipe to
+`haiku-apps/fatcat/fatcat-0.01.recipe` in a HaikuPorts tree and build it on
+Haiku with:
+
+```sh
+haikuporter -S fatcat-0.01
+```
+
+The resulting package installs the application, sprites, `fatcat-cli`, Deskbar
+add-on, documentation, and application-menu entry. The existing `make install`
+target remains available for development builds outside package management.
 
 ## Use
 

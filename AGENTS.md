@@ -59,8 +59,12 @@ ie.
 
 ## Versioning and releases
 
-- Use Semantic Versioning: patch for backward-compatible fixes, minor for backward-compatible features, and major for breaking changes.
-- Use complete `MAJOR.MINORPATCH` tags for releases. ie. 0.11 or 0.1 never 0.10 or 0.1.1
+- Start releases at `0.01` and increment the version by `0.01` for each released
+  change: `0.02` through `0.09`, followed by `0.10`, `0.11`, and so on.
+- Use the same two-digit version in tags, application metadata, CLI output,
+  package recipes, and documentation.
+- Encode the two digits after the decimal in Haiku's `middle` and `minor`
+  resource fields: `0.01` is `0.0.1`, while `0.10` is `0.1.0`.
 - Treat released versions and published artifacts as immutable. Do **not** delete or replace a previous package to reuse its version; publish a new version instead.
 - Deprecate before removing public APIs when practical. Document migrations and breaking changes.
 - Update the changelog when one exists and keep release notes focused on user-visible changes.

@@ -1,0 +1,53 @@
+SUMMARY="A Pomodoro timer with collectible animated cats"
+DESCRIPTION="Fat Cat is a native Haiku Pomodoro timer with focus, short-break, \
+and long-break phases. Its Deskbar add-on provides timer controls and opens \
+animated break windows where completed breaks unlock collectible cats."
+HOMEPAGE="@HOMEPAGE@"
+COPYRIGHT="2026 arkane
+2026 Fat Cat contributors"
+LICENSE="MIT"
+REVISION="1"
+SOURCE_URI="@SOURCE_URI@"
+CHECKSUM_SHA256="@CHECKSUM_SHA256@"
+SOURCE_DIR="@SOURCE_DIR@"
+
+ARCHITECTURES="all !x86_gcc2"
+
+PROVIDES="
+	fatcat = $portVersion
+	app:fatcat = $portVersion
+	cmd:fatcat_cli = $portVersion
+	"
+REQUIRES="
+	haiku
+	"
+
+BUILD_REQUIRES="
+	haiku_devel
+	"
+BUILD_PREREQUIRES="
+	cmd:g++
+	cmd:make
+	"
+
+BUILD()
+{
+	make CXX=g++ $jobArgs
+}
+
+INSTALL()
+{
+	mkdir -p $appsDir/FatCat/assets $binDir $addOnsDir/deskbar $docDir
+	cp fatcat.app $appsDir/FatCat/fatcat.app
+	cp assets/cat-*.png $appsDir/FatCat/assets/
+	cp fatcat-cli $binDir/fatcat-cli
+	cp FatCatDeskbar.so $addOnsDir/deskbar/FatCatDeskbar.so
+	cp README.md LICENSE $docDir/
+
+	addAppDeskbarSymlink $appsDir/FatCat/fatcat.app "Fat Cat"
+}
+
+TEST()
+{
+	make test
+}

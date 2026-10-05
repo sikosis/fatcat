@@ -56,7 +56,8 @@ FatCatApp::ArgvReceived(int32 argc, char** argv)
 void
 FatCatApp::AboutRequested()
 {
-	BString aboutText("Fat Cat Pomodoro 2.0 for Haiku\n\n");
+	BString aboutText("Fat Cat Pomodoro ");
+	aboutText << kAppVersion << " for Haiku\n\n";
 	aboutText << kAppDescription
 		<< "\n\nNative Haiku Deskbar application\n"
 			"Original Fat Cat concept and sprites © 2026 arkane\n"
@@ -192,7 +193,7 @@ void
 FatCatApp::_ReplyStatus(BMessage* request)
 {
 	BMessage reply(B_REPLY);
-	reply.AddString("version", "2.0.0-haiku");
+	reply.AddString("version", kAppVersion);
 	reply.AddInt32("phase", (int32)fSession.phase);
 	reply.AddBool("paused", fSession.paused);
 	reply.AddInt32("remaining", fSession.Remaining(time(nullptr)));
