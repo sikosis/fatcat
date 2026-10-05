@@ -55,7 +55,7 @@ MainWindow::MainWindow(const Session& session, const Preferences& preferences)
 		fFavoriteButtons[i] = nullptr;
 	}
 	BTabView* tabs = new BTabView("tabs", B_WIDTH_FROM_LABEL);
-	tabs->AddTab(_BuildTimerTab(session, preferences));
+	tabs->AddTab(_BuildTimerTab());
 	tabs->TabAt(0)->SetLabel("Timer");
 	tabs->AddTab(_BuildCatsTab(session, preferences));
 	tabs->TabAt(1)->SetLabel("Cats");
@@ -64,7 +64,7 @@ MainWindow::MainWindow(const Session& session, const Preferences& preferences)
 }
 
 BView*
-MainWindow::_BuildTimerTab(const Session& session, const Preferences& preferences)
+MainWindow::_BuildTimerTab()
 {
 	BGroupView* view = new BGroupView(B_VERTICAL, 10);
 	view->SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
@@ -136,6 +136,8 @@ MainWindow::_BuildTimerTab(const Session& session, const Preferences& preference
 		.AddGlue();
 	return view;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 BView*
 MainWindow::_BuildCatsTab(const Session&, const Preferences&)

@@ -18,7 +18,8 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 	bool preview, bool blocking)
 	:
 	BWindow(blocking ? frame : BRect(0, 0, 620, 470), "Fat Cat break",
-		blocking ? B_NO_BORDER_WINDOW : B_TITLED_WINDOW,
+		blocking ? B_NO_BORDER_WINDOW_LOOK : B_TITLED_WINDOW_LOOK,
+		blocking ? B_MODAL_APP_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL,
 		B_ASYNCHRONOUS_CONTROLS | B_AUTO_UPDATE_SIZE_LIMITS
 			| (blocking ? B_NOT_CLOSABLE | B_NOT_ZOOMABLE | B_NOT_MINIMIZABLE : 0)),
 	fPreview(preview),
@@ -29,7 +30,6 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 	if (!blocking)
 		MoveTo(frame.left + (frame.Width() - Bounds().Width()) / 2,
 			frame.top + (frame.Height() - Bounds().Height()) / 2);
-	SetFeel(blocking ? B_MODAL_APP_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL);
 	SetWorkspaces(B_ALL_WORKSPACES);
 	AddShortcut(B_ESCAPE, 0, new BMessage(preview ? kMsgDismiss : kMsgSkipBreak), be_app);
 
@@ -78,6 +78,8 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 		fRunner = std::make_unique<BMessageRunner>(BMessenger(this), &tick, 200000);
 	}
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 bool
 BreakWindow::QuitRequested()

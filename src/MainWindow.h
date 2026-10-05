@@ -21,7 +21,7 @@ public:
 		const BString& persistenceError);
 
 private:
-	BView* _BuildTimerTab(const Session& session, const Preferences& preferences);
+	BView* _BuildTimerTab();
 	BView* _BuildCatsTab(const Session& session, const Preferences& preferences);
 	void _SendSettings();
 	void _UpdateControls();

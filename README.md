@@ -51,16 +51,16 @@ Deskbar is restarted automatically by Haiku. Launch `~/config/non-packaged/apps/
 
 HaikuPorts is the intended release format and produces a standard installable
 `.hpkg`. The recipe template is in
-[`packaging/haikuports/fatcat-0.01.recipe.in`](packaging/haikuports/fatcat-0.01.recipe.in).
+[`packaging/haikuports/fatcat-0.02.recipe.in`](packaging/haikuports/fatcat-0.02.recipe.in).
 
-After publishing the GitHub repository and creating the `v0.01` tag, replace
+After publishing the GitHub repository and creating the `v0.02` tag, replace
 the template's `@HOMEPAGE@`, `@SOURCE_URI@`, `@CHECKSUM_SHA256@`, and
 `@SOURCE_DIR@` values. Copy the completed recipe to
-`haiku-apps/fatcat/fatcat-0.01.recipe` in a HaikuPorts tree and build it on
+`haiku-apps/fatcat/fatcat-0.02.recipe` in a HaikuPorts tree and build it on
 Haiku with:
 
 ```sh
-haikuporter -S fatcat-0.01
+haikuporter -S fatcat-0.02
 ```
 
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar
