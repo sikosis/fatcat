@@ -12,7 +12,7 @@
 class CatView : public BView {
 public:
 	CatView(Preferences* preferences, int32 completedBreaks, bool preview,
-		bool reducedMotion);
+		bool reducedMotion, BBitmap* backdrop);
 	~CatView() override;
 	void AttachedToWindow() override;
 	void Draw(BRect update) override;
@@ -31,11 +31,13 @@ private:
 		float greetingCooldown;
 		float hop;
 		int32 frame;
+		float frameElapsed;
 	};
 
 	void _Reset();
 	void _Advance(float seconds);
 	void _ChooseActivity(Cat& cat);
+	BRect _CatFrame(const Cat& cat) const;
 	float _CatSize() const;
 
 	Preferences* fPreferences;
@@ -44,7 +46,7 @@ private:
 	bool fReducedMotion;
 	std::vector<Cat> fCats;
 	std::unique_ptr<BBitmap> fSheets[4];
+	std::unique_ptr<BBitmap> fBackdrop;
 	std::unique_ptr<BMessageRunner> fRunner;
 	bigtime_t fLastTick = 0;
 };
-

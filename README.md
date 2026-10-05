@@ -19,7 +19,7 @@ A native Haiku recreation of [Fat Cat Pomodoro](https://github.com/jeremielumand
 - Four cats with distinct personalities and six activities: walk, stretch, groom, yawn, loaf, and sleep.
 - Cat unlocks match the original: Mochi immediately, Miso after 1 completed break, Patches after 3, and Pepper after 6.
 - Cat renaming, favorites, screen selection, reduced motion, and a no-streak collection model.
-- Blocking break windows or gentle, non-modal break reminders. Escape and **Skip break** always dismiss a break; previews and skipped breaks never earn progress.
+- Full-screen break scenes place correctly paced cats over a snapshot of the desktop, with a compact control panel near the Deskbar. Escape and **Skip break** always dismiss a break; previews and skipped breaks never earn progress.
 - Clock changes are bounded, sleep time counts, overdue snapshots advance only one phase, and state writes are atomic.
 
 The bundled sprite sheets are copied from the MIT-licensed upstream project. The original copyright notice is retained in [LICENSE](LICENSE).
@@ -52,16 +52,16 @@ Deskbar is restarted automatically by Haiku. Launch `~/config/non-packaged/apps/
 
 HaikuPorts is the intended release format and produces a standard installable
 `.hpkg`. The recipe template is in
-[`packaging/haikuports/fatcat-0.06.recipe.in`](packaging/haikuports/fatcat-0.06.recipe.in).
+[`packaging/haikuports/fatcat-0.07.recipe.in`](packaging/haikuports/fatcat-0.07.recipe.in).
 
-After publishing the GitHub repository and creating the `v0.06` tag, replace
+After publishing the GitHub repository and creating the `v0.07` tag, replace
 the template's `@HOMEPAGE@`, `@SOURCE_URI@`, `@CHECKSUM_SHA256@`, and
 `@SOURCE_DIR@` values. Copy the completed recipe to
-`haiku-apps/fatcat/fatcat-0.06.recipe` in a HaikuPorts tree and build it on
+`haiku-apps/fatcat/fatcat-0.07.recipe` in a HaikuPorts tree and build it on
 Haiku with:
 
 ```sh
-haikuporter -S fatcat-0.06
+haikuporter -S fatcat-0.07
 ```
 
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar
@@ -74,7 +74,11 @@ The **Timer** tab starts, pauses/resumes, and stops the timer; previews the sanc
 
 The **Cats** tab shows collection progress. Names save when Enter is pressed or the field loses focus. If any unlocked cats are favorited, only favorites visit during real breaks; previews always show all four cats.
 
-Gentle mode uses a compact floating window so the rest of the desktop remains interactive. Blocking mode covers the selected screen(s), while Haiku system shortcuts remain available. It is a break prompt, not a security lock.
+Breaks and previews cover the selected screen with a snapshot-backed scene, so
+the cats appear to walk over the desktop without requiring window transparency.
+The control panel stays near the top-right Deskbar area. **Keep break overlay in
+front** makes real breaks modal; when disabled, another application can still be
+activated normally. Haiku system shortcuts remain available in either mode.
 
 Settings and timer state live in `~/config/settings/FatCat/`. Uninstalling keeps this directory so progress returns after reinstalling:
 

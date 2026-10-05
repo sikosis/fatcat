@@ -13,23 +13,34 @@ static const char* kFiles[] = {
 };
 static const int32 kUnlocks[] = { 0, 1, 3, 6 };
 
-static float RandomUnit() { return (float)rand() / (float)RAND_MAX; }
+static float
+RandomUnit()
+{
+	return (float)rand() / (float)RAND_MAX;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 CatView::CatView(Preferences* preferences, int32 completedBreaks, bool preview,
-	bool reducedMotion)
+	bool reducedMotion, BBitmap* backdrop)
 	:
 	BView("cat playground", B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE),
 	fPreferences(preferences),
 	fCompletedBreaks(completedBreaks),
 	fPreview(preview),
-	fReducedMotion(reducedMotion)
+	fReducedMotion(reducedMotion),
+	fBackdrop(backdrop)
 {
-	SetViewColor(B_TRANSPARENT_COLOR);
+	SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	for (int32 i = 0; i < 4; ++i)
 		fSheets[i].reset(BTranslationUtils::GetBitmap(ResourcePath(kFiles[i]).String()));
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 CatView::~CatView() = default;
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
 CatView::AttachedToWindow()
@@ -40,13 +51,18 @@ CatView::AttachedToWindow()
 		fRunner = std::make_unique<BMessageRunner>(BMessenger(this), &message, 33333);
 	}
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-float CatView::_CatSize() const
+
+float
+CatView::_CatSize() const
 {
 	float count = std::max<size_t>(1, fCats.size());
 	return std::max(96.0f, std::min({ 208.0f, Bounds().Width() / count,
 		Bounds().Height() * 0.42f }));
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
 CatView::_Reset()
@@ -82,13 +98,22 @@ CatView::_Reset()
 		cat.greetingCooldown = 0;
 		cat.hop = 0;
 		cat.frame = 0;
+		cat.frameElapsed = 0;
 		fCats.push_back(cat);
 	}
 	fLastTick = system_time();
 	Invalidate();
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void CatView::FrameResized(float, float) { _Reset(); }
+
+void
+CatView::FrameResized(float, float)
+{
+	_Reset();
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
 CatView::_ChooseActivity(Cat& cat)
@@ -111,7 +136,25 @@ CatView::_ChooseActivity(Cat& cat)
 			cat.hop = .55f;
 	}
 	cat.frame = 0;
+	cat.frameElapsed = 0;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+BRect
+CatView::_CatFrame(const Cat& cat) const
+{
+	float size = _CatSize();
+	float groundTop = Bounds().Height() * .55f;
+	float floorY = Bounds().Height() - size - 16;
+	float baseY = std::min(floorY, groundTop)
+		+ std::max(0.0f, floorY - groundTop) * cat.lane;
+	float hop = cat.hop > 0 ? sinf(3.14159265358979323846f
+		* (1 - cat.hop / .55f)) * 24 : 0;
+	return BRect(cat.x, baseY - hop, cat.x + size, baseY - hop + size);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
 CatView::_Advance(float seconds)
@@ -119,31 +162,60 @@ CatView::_Advance(float seconds)
 	float dt = std::clamp(seconds, 0.0f, 0.1f);
 	float size = _CatSize();
 	float maxX = std::max(0.0f, Bounds().Width() - size);
+	BRect dirty;
+	bool hasDirty = false;
+	auto include = [&dirty, &hasDirty](BRect frame) {
+		dirty = hasDirty ? dirty | frame : frame;
+		hasDirty = true;
+	};
 	for (Cat& cat : fCats) {
+		include(_CatFrame(cat));
 		cat.remaining -= dt;
 		cat.hop = std::max(0.0f, cat.hop - dt);
 		cat.greetingCooldown = std::max(0.0f, cat.greetingCooldown - dt);
 		if (cat.remaining <= 0)
 			_ChooseActivity(cat);
-		if (cat.activity != 0) { cat.hop = 0; continue; }
-		for (Cat& peer : fCats) {
-			if (&peer != &cat && std::abs(peer.lane - cat.lane) < .4f
-				&& std::abs(peer.x - cat.x) < size * .75f && cat.greetingCooldown <= 0) {
-				cat.greetingCooldown = 12;
-				if (cat.variant == 3)
-					cat.direction = peer.x >= cat.x ? -1 : 1;
-				else { cat.activity = 2; cat.remaining = 2.5f; cat.hop = 0; }
-				break;
+		if (cat.activity == 0) {
+			for (Cat& peer : fCats) {
+				if (&peer != &cat && std::abs(peer.lane - cat.lane) < .4f
+					&& std::abs(peer.x - cat.x) < size * .75f
+					&& cat.greetingCooldown <= 0) {
+					cat.greetingCooldown = 12;
+					if (cat.variant == 3)
+						cat.direction = peer.x >= cat.x ? -1 : 1;
+					else {
+						cat.activity = 2;
+						cat.remaining = 2.5f;
+						cat.hop = 0;
+						cat.frame = 0;
+						cat.frameElapsed = 0;
+					}
+					break;
+				}
 			}
+			if (cat.activity == 0) {
+				cat.x += cat.direction * cat.speed * dt;
+				if (cat.x >= maxX) { cat.x = maxX; cat.direction = -1; }
+				else if (cat.x <= 0) { cat.x = 0; cat.direction = 1; }
+			}
+		} else
+			cat.hop = 0;
+
+		static const float frameIntervals[] = { .15f, .30f, .25f, .42f, .90f, 1.30f };
+		cat.frameElapsed += dt;
+		while (cat.frameElapsed >= frameIntervals[cat.activity]) {
+			cat.frameElapsed -= frameIntervals[cat.activity];
+			cat.frame = (cat.frame + 1) % 4;
 		}
-		if (cat.activity != 0)
-			continue;
-		cat.x += cat.direction * cat.speed * dt;
-		if (cat.x >= maxX) { cat.x = maxX; cat.direction = -1; }
-		else if (cat.x <= 0) { cat.x = 0; cat.direction = 1; }
+		include(_CatFrame(cat));
 	}
-	Invalidate();
+	if (hasDirty) {
+		dirty.InsetBy(-2, -2);
+		Invalidate(dirty);
+	}
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
 CatView::MessageReceived(BMessage* message)
@@ -152,17 +224,24 @@ CatView::MessageReceived(BMessage* message)
 		bigtime_t now = system_time();
 		_Advance((now - fLastTick) / 1000000.0f);
 		fLastTick = now;
-		for (Cat& cat : fCats)
-			cat.frame = (cat.frame + 1) % 4;
 		return;
 	}
 	BView::MessageReceived(message);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
-CatView::Draw(BRect)
+CatView::Draw(BRect update)
 {
-	float size = _CatSize();
+	SetDrawingMode(B_OP_COPY);
+	if (fBackdrop)
+		DrawBitmap(fBackdrop.get(), update, update);
+	else {
+		SetHighUIColor(B_PANEL_BACKGROUND_COLOR);
+		FillRect(update);
+	}
+
 	for (const Cat& cat : fCats) {
 		BBitmap* sheet = fSheets[cat.variant].get();
 		if (!sheet)
@@ -172,15 +251,17 @@ CatView::Draw(BRect)
 		int32 activity = fReducedMotion ? 4 : cat.activity;
 		BRect source(cat.frame * cellW, activity * cellH,
 			(cat.frame + 1) * cellW - 1, (activity + 1) * cellH - 1);
-		float groundTop = Bounds().Height() * .55f;
-		float floorY = Bounds().Height() - size - 16;
-		float baseY = std::min(floorY, groundTop)
-			+ std::max(0.0f, floorY - groundTop) * cat.lane;
-		float hop = cat.hop > 0 ? sinf(3.14159265358979323846f
-			* (1 - cat.hop / .55f)) * 24 : 0;
-		BRect destination(cat.x, baseY - hop, cat.x + size, baseY - hop + size);
+		BRect destination = _CatFrame(cat);
 		SetDrawingMode(B_OP_ALPHA);
-		// BView cannot mirror DrawBitmap directly; direction still drives movement.
+		SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
+		if (cat.direction < 0) {
+			PushState();
+			TranslateBy(destination.left + destination.right, 0);
+			ScaleBy(-1, 1);
+		}
 		DrawBitmap(sheet, source, destination);
+		if (cat.direction < 0)
+			PopState();
 	}
 }
+//---------------------------------------------------------------------------------------------------------------------------------//

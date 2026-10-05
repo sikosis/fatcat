@@ -6,8 +6,10 @@
 #include <Application.h>
 #include <Button.h>
 #include <Catalog.h>
+#include <GroupView.h>
 #include <InterfaceDefs.h>
 #include <LayoutBuilder.h>
+#include <Screen.h>
 #include <StringView.h>
 
 #include <algorithm>
@@ -18,27 +20,34 @@ static constexpr uint32 kPreviewTick = 'pvtk';
 BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedBreaks,
 	bool preview, bool blocking)
 	:
-	BWindow(blocking ? frame : BRect(0, 0, 620, 470), "Fat Cat break",
-		blocking ? B_NO_BORDER_WINDOW_LOOK : B_TITLED_WINDOW_LOOK,
+	BWindow(frame, "Fat Cat break", B_NO_BORDER_WINDOW_LOOK,
 		blocking ? B_MODAL_APP_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL,
-		B_ASYNCHRONOUS_CONTROLS | B_AUTO_UPDATE_SIZE_LIMITS
-			| (blocking ? B_NOT_CLOSABLE | B_NOT_ZOOMABLE | B_NOT_MINIMIZABLE : 0)),
+		B_ASYNCHRONOUS_CONTROLS | B_NOT_CLOSABLE | B_NOT_ZOOMABLE
+			| B_NOT_MINIMIZABLE | B_NOT_MOVABLE | B_NOT_RESIZABLE),
 	fPreview(preview),
 	fPreviewSeconds(15),
 	fPreviewDeadline(system_time() + 15000000),
 	fCountdown(nullptr)
 {
-	if (!blocking)
-		MoveTo(frame.left + (frame.Width() - Bounds().Width()) / 2,
-			frame.top + (frame.Height() - Bounds().Height()) / 2);
 	int32 workspace = current_workspace();
 	if (workspace >= 0 && workspace < 32)
 		SetWorkspaces(uint32(1) << workspace);
 	AddShortcut(B_ESCAPE, 0, new BMessage(preview ? kMsgDismiss : kMsgSkipBreak), this);
 
+	BBitmap* backdrop = nullptr;
+	BScreen screen(this);
+	if (screen.GetBitmap(&backdrop, false) != B_OK) {
+		delete backdrop;
+		backdrop = nullptr;
+	}
 	CatView* cats = new CatView(preferences, completedBreaks, preview,
-		preferences->reducedMotion);
-	cats->SetExplicitMinSize(BSize(420, 230));
+		preferences->reducedMotion, backdrop);
+	cats->ResizeTo(Bounds().Width(), Bounds().Height());
+	cats->SetResizingMode(B_FOLLOW_ALL);
+	AddChild(cats);
+
+	BGroupView* panel = new BGroupView(B_VERTICAL, 8);
+	panel->SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
 
 	BStringView* title = new BStringView("title", preview ? "MEET YOUR CATS" : "CAT BREAK");
 	title->SetAlignment(B_ALIGN_CENTER);
@@ -60,12 +69,11 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 	if (preview)
 		pause->Hide();
 
-	BLayoutBuilder::Group<>(this, B_VERTICAL, 10)
-		.SetInsets(18)
+	BLayoutBuilder::Group<>(panel, B_VERTICAL, 8)
+		.SetInsets(14)
 		.Add(title)
 		.Add(fCountdown)
 		.Add(prompt)
-		.Add(cats, 1)
 		.AddGroup(B_HORIZONTAL, 8)
 			.AddGlue()
 			.Add(close)
@@ -75,6 +83,10 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 		.Add(new BStringView("hint", preview
 			? "Preview closes automatically · No progress is earned"
 			: "Esc to skip · Your next focus session starts after this break"));
+	panel->ResizeTo(std::min(430.0f, Bounds().Width() - 24), 205);
+	panel->MoveTo(std::max(12.0f, Bounds().Width() - panel->Bounds().Width() - 12),
+		48);
+	cats->AddChild(panel);
 
 	if (preview) {
 		BMessage tick(kPreviewTick);
@@ -91,6 +103,8 @@ BreakWindow::QuitRequested()
 	be_app->PostMessage(&message);
 	return false;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
 BreakWindow::MessageReceived(BMessage* message)
@@ -114,6 +128,8 @@ BreakWindow::MessageReceived(BMessage* message)
 	}
 	BWindow::MessageReceived(message);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
 BreakWindow::SetCountdown(const BString& value)
@@ -123,3 +139,4 @@ BreakWindow::SetCountdown(const BString& value)
 		Unlock();
 	}
 }
+//---------------------------------------------------------------------------------------------------------------------------------//

@@ -85,7 +85,7 @@ MainWindow::_BuildTimerTab()
 	fEvery = new BTextControl("Long break every:", "", nullptr);
 	for (BTextControl* field : { fFocus, fBreak, fLongBreak, fEvery })
 		field->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
-	fBlocking = new BCheckBox("Blocking break covers your work", nullptr);
+	fBlocking = new BCheckBox("Keep break overlay in front", nullptr);
 	fMotion = new BCheckBox("Reduced motion", nullptr);
 
 	BMenu* screens = new BMenu("All screens");
