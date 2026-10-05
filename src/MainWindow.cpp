@@ -105,6 +105,7 @@ MainWindow::_BuildTimerTab()
 	fMonitor = new BMenuField("Show cats on:", screens);
 	fSaveMessage = new BStringView("save result", "");
 	BButton* save = new BButton("Save settings", new BMessage(kSave));
+	save->SetTarget(this);
 
 	BLayoutBuilder::Group<>(view, B_VERTICAL, 10)
 		.SetInsets(12)
@@ -199,7 +200,7 @@ MainWindow::_SendSettings()
 		save.AddBool("blocking", fBlocking->Value() == B_CONTROL_ON);
 		save.AddBool("reduced_motion", fMotion->Value() == B_CONTROL_ON);
 		save.AddString("monitor", fPreferences.selectedMonitor);
-		be_app_messenger.SendMessage(&save);
+		be_app->PostMessage(&save);
 		fSaveMessage->SetText("Saved · applies to the next interval.");
 		return;
 	}
@@ -212,7 +213,7 @@ MainWindow::MessageReceived(BMessage* message)
 	if (message->what == kMsgStart || message->what == kMsgPauseResume
 		|| message->what == kMsgStop || message->what == kMsgPreview
 		|| message->what == B_ABOUT_REQUESTED) {
-		be_app_messenger.SendMessage(message);
+		be_app->PostMessage(message);
 		return;
 	}
 	if (message->what == kSave) { _SendSettings(); return; }
@@ -227,13 +228,13 @@ MainWindow::MessageReceived(BMessage* message)
 		BMessage rename(kMsgRenameCat);
 		rename.AddInt32("id", id);
 		rename.AddString("name", fCatNames[id]->Text());
-		be_app_messenger.SendMessage(&rename);
+		be_app->PostMessage(&rename);
 		return;
 	}
 	if (message->what >= kFavoriteBase && message->what < kFavoriteBase + 4) {
 		BMessage favorite(kMsgToggleFavorite);
 		favorite.AddInt32("id", message->what - kFavoriteBase);
-		be_app_messenger.SendMessage(&favorite);
+		be_app->PostMessage(&favorite);
 		return;
 	}
 	BWindow::MessageReceived(message);

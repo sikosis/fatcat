@@ -88,7 +88,7 @@ bool
 BreakWindow::QuitRequested()
 {
 	BMessage message(fPreview ? kMsgDismiss : kMsgSkipBreak);
-	be_app_messenger.SendMessage(&message);
+	be_app->PostMessage(&message);
 	return false;
 }
 
@@ -97,7 +97,7 @@ BreakWindow::MessageReceived(BMessage* message)
 {
 	if (message->what == kMsgDismiss || message->what == kMsgSkipBreak
 		|| message->what == kMsgPauseResume) {
-		be_app_messenger.SendMessage(message);
+		be_app->PostMessage(message);
 		return;
 	}
 	if (message->what == kPreviewTick) {
@@ -108,7 +108,7 @@ BreakWindow::MessageReceived(BMessage* message)
 		fCountdown->SetText(text);
 		if (fPreviewSeconds == 0) {
 			BMessage dismiss(kMsgDismiss);
-			be_app_messenger.SendMessage(&dismiss);
+			be_app->PostMessage(&dismiss);
 		}
 		return;
 	}

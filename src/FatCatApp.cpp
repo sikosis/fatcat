@@ -7,8 +7,11 @@
 #include <Alert.h>
 #include <Bitmap.h>
 #include <Deskbar.h>
+#include <Entry.h>
+#include <FindDirectory.h>
 #include <IconUtils.h>
 #include <InterfaceDefs.h>
+#include <Path.h>
 #include <Resources.h>
 #include <Roster.h>
 #include <Screen.h>
@@ -16,6 +19,16 @@
 #include <algorithm>
 #include <ctime>
 #include <cstdio>
+
+static status_t
+AddDeskbarItem(BDeskbar& deskbar, const char* path)
+{
+	BEntry entry(path, true);
+	entry_ref ref;
+	status_t status = entry.GetRef(&ref);
+	return status == B_OK ? deskbar.AddItem(&ref) : status;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
 
 FatCatApp::FatCatApp()
 	:
@@ -66,8 +79,37 @@ FatCatApp::_EnsureDeskbarItem()
 	if (deskbar.HasItem(kDeskbarItemName))
 		return;
 	entry_ref addOn;
-	if (be_roster->FindApp(kDeskbarSignature, &addOn) == B_OK)
-		deskbar.AddItem(&addOn);
+	if (be_roster->FindApp(kDeskbarSignature, &addOn) == B_OK
+		&& deskbar.AddItem(&addOn) == B_OK)
+		return;
+
+	app_info info;
+	BPath path;
+	if (GetAppInfo(&info) == B_OK) {
+		BEntry application(&info.ref);
+		BPath applicationPath;
+		if (application.GetPath(&applicationPath) == B_OK
+			&& applicationPath.GetParent(&path) == B_OK) {
+			path.Append("FatCatDeskbar.so");
+			if (AddDeskbarItem(deskbar, path.Path()) == B_OK)
+				return;
+		}
+	}
+
+	const directory_which locations[] = {
+		B_USER_NONPACKAGED_ADDONS_DIRECTORY,
+		B_USER_ADDONS_DIRECTORY,
+		B_SYSTEM_NONPACKAGED_ADDONS_DIRECTORY,
+		B_SYSTEM_ADDONS_DIRECTORY
+	};
+	for (directory_which location : locations) {
+		if (find_directory(location, &path) != B_OK)
+			continue;
+		path.Append("deskbar/FatCatDeskbar.so");
+		if (AddDeskbarItem(deskbar, path.Path()) == B_OK)
+			return;
+	}
+	fPersistenceError = "Deskbar item could not be installed.";
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -78,7 +120,7 @@ FatCatApp::AboutRequested()
 	BString aboutText("Fat Cat Pomodoro ");
 	aboutText << kAppVersion << " for Haiku\n\n";
 	aboutText << kAppDescription
-		<< "\n\nNative Haiku Deskbar application\n"
+		<< "\n\nDesigned by Sikosis.\n"
 			"Original Fat Cat concept and sprites © 2026 arkane\n"
 			"Released under the MIT License.";
 	BAlert* about = new BAlert("About Fat Cat",

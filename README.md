@@ -52,16 +52,16 @@ Deskbar is restarted automatically by Haiku. Launch `~/config/non-packaged/apps/
 
 HaikuPorts is the intended release format and produces a standard installable
 `.hpkg`. The recipe template is in
-[`packaging/haikuports/fatcat-0.04.recipe.in`](packaging/haikuports/fatcat-0.04.recipe.in).
+[`packaging/haikuports/fatcat-0.06.recipe.in`](packaging/haikuports/fatcat-0.06.recipe.in).
 
-After publishing the GitHub repository and creating the `v0.04` tag, replace
+After publishing the GitHub repository and creating the `v0.06` tag, replace
 the template's `@HOMEPAGE@`, `@SOURCE_URI@`, `@CHECKSUM_SHA256@`, and
 `@SOURCE_DIR@` values. Copy the completed recipe to
-`haiku-apps/fatcat/fatcat-0.04.recipe` in a HaikuPorts tree and build it on
+`haiku-apps/fatcat/fatcat-0.06.recipe` in a HaikuPorts tree and build it on
 Haiku with:
 
 ```sh
-haikuporter -S fatcat-0.04
+haikuporter -S fatcat-0.06
 ```
 
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar
@@ -84,7 +84,8 @@ make uninstall
 
 ## Command-line actions
 
-`fatcat-cli` provides the same control surface as the original plugin IPC. When Fat Cat is running:
+`fatcat-cli` provides the same control surface as the original plugin IPC. It
+starts the background application automatically when a command needs it:
 
 ```sh
 fatcat-cli start

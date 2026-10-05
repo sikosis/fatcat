@@ -3,6 +3,8 @@
 #include <Application.h>
 #include <Message.h>
 #include <Messenger.h>
+#include <OS.h>
+#include <Roster.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -16,6 +18,29 @@ Usage()
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
+static bool
+FindOrLaunchApplication(BMessenger& target)
+{
+	target = BMessenger(kAppSignature);
+	if (target.IsValid())
+		return true;
+
+	const char* arguments[] = { "--background" };
+	status_t status = be_roster->Launch(kAppSignature, 1, arguments);
+	if (status != B_OK && status != B_ALREADY_RUNNING)
+		return false;
+
+	for (int32 attempt = 0; attempt < 40; attempt++) {
+		snooze(50000);
+		target = BMessenger(kAppSignature);
+		if (target.IsValid())
+			return true;
+	}
+	return false;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
 int
 main(int argc, char** argv)
 {
@@ -25,11 +50,6 @@ main(int argc, char** argv)
 		printf("Fat Cat Pomodoro %s for Haiku\n%s\n", kAppVersion,
 			kAppDescription);
 		return 0;
-	}
-	BMessenger target(kAppSignature);
-	if (!target.IsValid()) {
-		fprintf(stderr, "Fat Cat is not running. Start it from Deskbar first.\n");
-		return 1;
 	}
 	BMessage message;
 	if (strcmp(argv[1], "start") == 0) message.what = kMsgStart;
@@ -48,11 +68,28 @@ main(int argc, char** argv)
 		message.what = kMsgSaveSettings;
 		message.AddInt32("focus", focus);
 		message.AddInt32("break", rest);
-	} else if (strcmp(argv[1], "status") == 0) {
+	} else if (strcmp(argv[1], "status") == 0)
 		message.what = kMsgStatus;
+	else {
+		Usage();
+		return 2;
+	}
+
+	BMessenger target(kAppSignature);
+	if (!target.IsValid() && message.what == kMsgQuit)
+		return 0;
+	if (!FindOrLaunchApplication(target)) {
+		fprintf(stderr, "Fat Cat could not be started. Run make install and try again.\n");
+		return 1;
+	}
+
+	if (message.what == kMsgStatus) {
 		BMessage reply;
 		status_t result = target.SendMessage(&message, &reply, 1000000, 1000000);
-		if (result != B_OK) return 1;
+		if (result != B_OK) {
+			fprintf(stderr, "Fat Cat did not respond to the status request.\n");
+			return 1;
+		}
 		const char* version = "", *countdown = "", *error = "";
 		int32 phase = 0, remaining = 0, breaks = 0;
 		bool paused = false, preview = false;
@@ -72,10 +109,11 @@ main(int argc, char** argv)
 			paused ? "true" : "false", (long)remaining, countdown,
 			preview ? "true" : "false", (long)breaks, error);
 		return 0;
-	} else {
-		Usage();
-		return 2;
 	}
-	return target.SendMessage(&message) == B_OK ? 0 : 1;
+
+	status_t result = target.SendMessage(&message, (BHandler*)nullptr, 1000000);
+	if (result != B_OK)
+		fprintf(stderr, "Fat Cat did not respond to the command.\n");
+	return result == B_OK ? 0 : 1;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
