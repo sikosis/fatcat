@@ -36,8 +36,10 @@ public:
 	status_t Archive(BMessage* archive, bool deep = true) const override
 	{
 		status_t status = BView::Archive(archive, deep);
-		if (status == B_OK)
-			archive->AddString("add_on", "application/x-vnd.arkane-FatCatDeskbar");
+		if (status == B_OK) {
+			archive->AddString("class", "FatCatDeskbarView");
+			archive->AddString("add_on", kDeskbarSignature);
+		}
 		return status;
 	}
 
@@ -47,8 +49,8 @@ public:
 		if (Window()) Window()->SetPulseRate(1000000);
 		BMessenger app(kAppSignature);
 		if (!app.IsValid()) {
-			const char* arguments[] = { "fatcat.app", "--background" };
-			be_roster->Launch(kAppSignature, 2, arguments);
+			const char* arguments[] = { "--background" };
+			be_roster->Launch(kAppSignature, 1, arguments);
 		}
 		_Query();
 	}
@@ -90,9 +92,9 @@ public:
 		if (app.IsValid())
 			app.SendMessage(&message);
 		else {
-			const char* arguments[] = { "fatcat.app",
+			const char* arguments[] = {
 				what == kMsgPreview ? "--preview" : "--show" };
-			be_roster->Launch(kAppSignature, 2, arguments);
+			be_roster->Launch(kAppSignature, 1, arguments);
 		}
 	}
 

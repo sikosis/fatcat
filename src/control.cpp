@@ -11,7 +11,7 @@
 static void
 Usage()
 {
-	fprintf(stderr, "usage: fatcat-cli {about|start|pause|resume|stop|preview|dismiss|status|configure FOCUS BREAK}\n");
+	fprintf(stderr, "usage: fatcat-cli {about|start|pause|resume|stop|preview|dismiss|status|quit|configure FOCUS BREAK}\n");
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -38,6 +38,7 @@ main(int argc, char** argv)
 	else if (strcmp(argv[1], "stop") == 0) message.what = kMsgStop;
 	else if (strcmp(argv[1], "preview") == 0) message.what = kMsgPreview;
 	else if (strcmp(argv[1], "dismiss") == 0) message.what = kMsgDismiss;
+	else if (strcmp(argv[1], "quit") == 0) message.what = kMsgQuit;
 	else if (strcmp(argv[1], "configure") == 0 && argc == 4) {
 		char* end = nullptr;
 		long focus = strtol(argv[2], &end, 10);

@@ -6,6 +6,7 @@
 #include <Application.h>
 #include <Button.h>
 #include <Catalog.h>
+#include <InterfaceDefs.h>
 #include <LayoutBuilder.h>
 #include <StringView.h>
 
@@ -30,8 +31,10 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 	if (!blocking)
 		MoveTo(frame.left + (frame.Width() - Bounds().Width()) / 2,
 			frame.top + (frame.Height() - Bounds().Height()) / 2);
-	SetWorkspaces(B_ALL_WORKSPACES);
-	AddShortcut(B_ESCAPE, 0, new BMessage(preview ? kMsgDismiss : kMsgSkipBreak), be_app);
+	int32 workspace = current_workspace();
+	if (workspace >= 0 && workspace < 32)
+		SetWorkspaces(uint32(1) << workspace);
+	AddShortcut(B_ESCAPE, 0, new BMessage(preview ? kMsgDismiss : kMsgSkipBreak), this);
 
 	CatView* cats = new CatView(preferences, completedBreaks, preview,
 		preferences->reducedMotion);
@@ -51,9 +54,9 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 	prompt->SetAlignment(B_ALIGN_CENTER);
 	BButton* close = new BButton(preview ? "Close preview" : "Skip break",
 		new BMessage(preview ? kMsgDismiss : kMsgSkipBreak));
-	close->SetTarget(be_app);
+	close->SetTarget(this);
 	BButton* pause = new BButton("Pause timer", new BMessage(kMsgPauseResume));
-	pause->SetTarget(be_app);
+	pause->SetTarget(this);
 	if (preview)
 		pause->Hide();
 
@@ -92,6 +95,11 @@ BreakWindow::QuitRequested()
 void
 BreakWindow::MessageReceived(BMessage* message)
 {
+	if (message->what == kMsgDismiss || message->what == kMsgSkipBreak
+		|| message->what == kMsgPauseResume) {
+		be_app_messenger.SendMessage(message);
+		return;
+	}
 	if (message->what == kPreviewTick) {
 		fPreviewSeconds = std::max(0, (int32)((fPreviewDeadline - system_time()
 			+ 999999) / 1000000));

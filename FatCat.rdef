@@ -1,13 +1,13 @@
 resource app_signature "application/x-vnd.arkane-FatCat";
 
-resource app_flags B_SINGLE_LAUNCH;
+resource app_flags B_SINGLE_LAUNCH | B_BACKGROUND_APP;
 
 resource(101, "BEOS:ICON") #'VICN' import "artwork/fatcat-icon.hvif";
 
 resource app_version {
 	major  = 0,
 	middle = 0,
-	minor  = 3,
+	minor  = 4,
 	variety = B_APPV_FINAL,
 	internal = 0,
 	short_info = "Fat Cat Pomodoro",

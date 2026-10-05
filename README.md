@@ -12,7 +12,8 @@ A native Haiku recreation of [Fat Cat Pomodoro](https://github.com/jeremielumand
 
 - Focus, short-break, and long-break phases. Defaults are 25 minutes focus, 5 minutes short break, 15 minutes long break, and one long break after every 4 completed focus sessions.
 - A live Deskbar readout. Primary-click opens Fat Cat; secondary-click starts a safe 15-second preview.
-- The Deskbar item starts the timer service quietly at login and keeps it running after the settings window closes.
+- Fat Cat runs as a background application in Deskbar and keeps working after
+  the settings window closes.
 - An original cat-and-Pomodoro HVIF icon is embedded in `fatcat.app` and displayed in its native About box.
 - Persistent, suspend-aware timers. Paused timers, interval progress, settings, collection progress, names, and favorites survive restarts.
 - Four cats with distinct personalities and six activities: walk, stretch, groom, yawn, loaf, and sleep.
@@ -51,16 +52,16 @@ Deskbar is restarted automatically by Haiku. Launch `~/config/non-packaged/apps/
 
 HaikuPorts is the intended release format and produces a standard installable
 `.hpkg`. The recipe template is in
-[`packaging/haikuports/fatcat-0.03.recipe.in`](packaging/haikuports/fatcat-0.03.recipe.in).
+[`packaging/haikuports/fatcat-0.04.recipe.in`](packaging/haikuports/fatcat-0.04.recipe.in).
 
-After publishing the GitHub repository and creating the `v0.03` tag, replace
+After publishing the GitHub repository and creating the `v0.04` tag, replace
 the template's `@HOMEPAGE@`, `@SOURCE_URI@`, `@CHECKSUM_SHA256@`, and
 `@SOURCE_DIR@` values. Copy the completed recipe to
-`haiku-apps/fatcat/fatcat-0.03.recipe` in a HaikuPorts tree and build it on
+`haiku-apps/fatcat/fatcat-0.04.recipe` in a HaikuPorts tree and build it on
 Haiku with:
 
 ```sh
-haikuporter -S fatcat-0.03
+haikuporter -S fatcat-0.04
 ```
 
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar
@@ -93,6 +94,7 @@ fatcat-cli resume
 fatcat-cli stop
 fatcat-cli preview
 fatcat-cli dismiss
+fatcat-cli quit
 fatcat-cli configure 25 5
 fatcat-cli status
 ```

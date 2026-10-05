@@ -71,13 +71,13 @@ MainWindow::_BuildTimerTab()
 	fStatus = new BStringView("status", "Ready when you are.");
 	fStatus->SetFont(be_bold_font);
 	fPrimary = new BButton("Start focus", new BMessage(kMsgStart));
-	fPrimary->SetTarget(be_app);
+	fPrimary->SetTarget(this);
 	fStop = new BButton("Stop", new BMessage(kMsgStop));
-	fStop->SetTarget(be_app);
+	fStop->SetTarget(this);
 	BButton* preview = new BButton("Preview cats", new BMessage(kMsgPreview));
-	preview->SetTarget(be_app);
+	preview->SetTarget(this);
 	BButton* about = new BButton("About…", new BMessage(B_ABOUT_REQUESTED));
-	about->SetTarget(be_app);
+	about->SetTarget(this);
 
 	fFocus = new BTextControl("Focus:", "", nullptr);
 	fBreak = new BTextControl("Short break:", "", nullptr);
@@ -209,6 +209,12 @@ MainWindow::_SendSettings()
 void
 MainWindow::MessageReceived(BMessage* message)
 {
+	if (message->what == kMsgStart || message->what == kMsgPauseResume
+		|| message->what == kMsgStop || message->what == kMsgPreview
+		|| message->what == B_ABOUT_REQUESTED) {
+		be_app_messenger.SendMessage(message);
+		return;
+	}
 	if (message->what == kSave) { _SendSettings(); return; }
 	if (message->what == kSelectMonitor) {
 		const char* monitor;
@@ -260,7 +266,7 @@ MainWindow::_UpdateControls()
 	fPrimary->SetLabel(fSession.phase == Phase::Idle ? "Start focus"
 		: fSession.paused ? "Resume" : "Pause");
 	fPrimary->SetMessage(new BMessage(fSession.phase == Phase::Idle ? kMsgStart : kMsgPauseResume));
-	fPrimary->SetTarget(be_app);
+	fPrimary->SetTarget(this);
 	fStop->SetEnabled(fSession.phase != Phase::Idle);
 
 	if (!fSettingsInitialized) {

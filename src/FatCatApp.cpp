@@ -6,8 +6,11 @@
 
 #include <Alert.h>
 #include <Bitmap.h>
+#include <Deskbar.h>
 #include <IconUtils.h>
+#include <InterfaceDefs.h>
 #include <Resources.h>
+#include <Roster.h>
 #include <Screen.h>
 
 #include <algorithm>
@@ -24,6 +27,7 @@ void
 FatCatApp::ReadyToRun()
 {
 	_Load();
+	_EnsureDeskbarItem();
 	fMainWindow = new MainWindow(fSession, fPreferences);
 	fMainWindow->CenterOnScreen();
 	if (!fCommandLineOnly)
@@ -37,8 +41,10 @@ FatCatApp::ReadyToRun()
 void
 FatCatApp::ArgvReceived(int32 argc, char** argv)
 {
-	if (argc < 2)
+	if (argc < 2) {
+		PostMessage(kMsgShow);
 		return;
+	}
 	fCommandLineOnly = true;
 	BString command(argv[1]);
 	if (command == "--start") PostMessage(kMsgStart);
@@ -52,6 +58,19 @@ FatCatApp::ArgvReceived(int32 argc, char** argv)
 		printf("Fat Cat is running. Use the Deskbar item for live status.\n");
 	}
 }
+
+void
+FatCatApp::_EnsureDeskbarItem()
+{
+	BDeskbar deskbar;
+	if (deskbar.HasItem(kDeskbarItemName))
+		return;
+	entry_ref addOn;
+	if (be_roster->FindApp(kDeskbarSignature, &addOn) == B_OK)
+		deskbar.AddItem(&addOn);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 
 void
 FatCatApp::AboutRequested()
@@ -134,6 +153,9 @@ FatCatApp::_ShowMain()
 		return;
 	if (fMainWindow->Lock()) {
 		fMainWindow->Update(fSession, fPreferences, fPersistenceError);
+		int32 workspace = current_workspace();
+		if (workspace >= 0 && workspace < 32)
+			fMainWindow->SetWorkspaces(uint32(1) << workspace);
 		fMainWindow->Unlock();
 	}
 	if (fMainWindow->IsHidden())

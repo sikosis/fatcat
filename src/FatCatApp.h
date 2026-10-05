@@ -22,6 +22,7 @@ public:
 	bool QuitRequested() override;
 
 private:
+	void _EnsureDeskbarItem();
 	void _Load();
 	void _SaveSession();
 	void _SavePreferences();
