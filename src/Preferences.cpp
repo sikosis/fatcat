@@ -6,6 +6,7 @@
 #include <File.h>
 #include <FindDirectory.h>
 #include <Path.h>
+#include <Roster.h>
 
 #include <algorithm>
 #include <cstdio>
