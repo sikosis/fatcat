@@ -1,0 +1,12 @@
+resource app_signature "application/x-vnd.arkane-FatCatControl";
+resource app_flags B_MULTIPLE_LAUNCH;
+
+resource app_version {
+	major  = 2,
+	middle = 0,
+	minor  = 0,
+	variety = B_APPV_FINAL,
+	internal = 0,
+	short_info = "Fat Cat command-line control",
+	long_info = "A cozy Pomodoro timer that fills your breaks with collectible animated cats."
+};

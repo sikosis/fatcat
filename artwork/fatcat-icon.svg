@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="fur" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd36a"/>
+      <stop offset="1" stop-color="#e98b24"/>
+    </linearGradient>
+    <linearGradient id="tomato" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ff765f"/>
+      <stop offset="1" stop-color="#d83a36"/>
+    </linearGradient>
+  </defs>
+  <!-- A plump orange cat wrapped around a Pomodoro tomato. -->
+  <path d="M12 25 L9 7 L23 15 C28 12 36 12 41 15 L55 7 L52 26
+           C57 31 58 40 54 47 C50 55 42 59 32 59
+           C22 59 14 55 10 47 C6 40 7 31 12 25 Z"
+        fill="url(#fur)" stroke="#54331f" stroke-width="2.8" stroke-linejoin="round"/>
+  <path d="M13 12 L15 23 L21 17 Z M51 12 L49 23 L43 17 Z"
+        fill="#f59ca0" stroke="#54331f" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M18 29 C20 26 23 26 25 29 M39 29 C41 26 44 26 46 29"
+        fill="none" stroke="#54331f" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M29 33 Q32 30 35 33 Q32 36 29 33 Z" fill="#8d4d3b"/>
+  <path d="M32 35 C30 38 27 38 25 37 M32 35 C34 38 37 38 39 37"
+        fill="none" stroke="#54331f" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M14 34 L5 32 M15 38 L5 39 M50 34 L59 32 M49 38 L59 40"
+        fill="none" stroke="#54331f" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="32" cy="47" r="10.5" fill="url(#tomato)" stroke="#7d2c28" stroke-width="2.2"/>
+  <path d="M32 37 C30 34 27 34 25 35 C28 37 29 39 32 39
+           C35 39 36 37 39 35 C36 34 34 34 32 37 Z"
+        fill="#4f9a49" stroke="#326b35" stroke-width="1.2" stroke-linejoin="round"/>
+  <circle cx="32" cy="47" r="6.7" fill="#fff5dd" stroke="#7d2c28" stroke-width="1.2"/>
+  <path d="M32 42.5 L32 47 L36 49" fill="none" stroke="#54331f" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M17 20 C20 16 24 15 28 15" fill="none" stroke="#fff4c7" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+</svg>
