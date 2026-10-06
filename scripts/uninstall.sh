@@ -4,6 +4,12 @@ set -eu
 if [ -x "${HOME}/config/non-packaged/bin/fatcat-cli" ]; then
 	"${HOME}/config/non-packaged/bin/fatcat-cli" quit >/dev/null 2>&1 || true
 fi
+sleep 1
+if command -v killall >/dev/null 2>&1; then
+	killall fatcat.app >/dev/null 2>&1 || true
+	sleep 1
+	killall -9 fatcat.app >/dev/null 2>&1 || true
+fi
 if command -v desklink >/dev/null 2>&1; then
 	desklink --remove=FatCatDeskbar >/dev/null 2>&1 || true
 fi

@@ -10,6 +10,10 @@ mkdir -p "$app_dir/assets" "$deskbar_dir" "$bin_dir"
 sleep 1
 if command -v killall >/dev/null 2>&1; then
 	killall fatcat.app >/dev/null 2>&1 || true
+	sleep 1
+	# A previous build may be blocked inside Deskbar IPC and unable to handle
+	# either its quit message or SIGTERM. Ensure it cannot hold up replacement.
+	killall -9 fatcat.app >/dev/null 2>&1 || true
 fi
 if command -v desklink >/dev/null 2>&1; then
 	desklink --remove=FatCatDeskbar >/dev/null 2>&1 || true

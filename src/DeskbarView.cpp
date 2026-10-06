@@ -6,6 +6,7 @@
 #include <IconUtils.h>
 #include <InterfaceDefs.h>
 #include <Message.h>
+#include <MessageRunner.h>
 #include <Resources.h>
 #include <Roster.h>
 #include <String.h>
@@ -16,13 +17,15 @@
 #include <cstdio>
 
 static const int32 kResourceAnchor = 0;
+static constexpr uint32 kDeskbarPoll = 'fcdp';
 
 class FatCatDeskbarView : public BView {
 public:
 	FatCatDeskbarView(BRect frame)
 		:
-		BView(frame, kDeskbarItemName, B_FOLLOW_NONE, B_WILL_DRAW | B_PULSE_NEEDED),
-		fIcon(nullptr), fRunning(false), fPhase(0), fPaused(false), fRemaining(0)
+		BView(frame, kDeskbarItemName, B_FOLLOW_NONE, B_WILL_DRAW),
+		fIcon(nullptr), fRunner(nullptr), fRunning(false), fPhase(0),
+		fPaused(false), fRemaining(0)
 	{
 		SetViewColor(B_TRANSPARENT_COLOR);
 		_LoadIcon();
@@ -30,13 +33,17 @@ public:
 
 	FatCatDeskbarView(BMessage* archive)
 		:
-		BView(archive), fIcon(nullptr), fRunning(false), fPhase(0), fPaused(false),
-		fRemaining(0)
+		BView(archive), fIcon(nullptr), fRunner(nullptr), fRunning(false),
+		fPhase(0), fPaused(false), fRemaining(0)
 	{
 		_LoadIcon();
 	}
 
-	~FatCatDeskbarView() override { delete fIcon; }
+	~FatCatDeskbarView() override
+	{
+		delete fRunner;
+		delete fIcon;
+	}
 
 	static BArchivable* Instantiate(BMessage* archive);
 
@@ -55,16 +62,40 @@ public:
 	void AttachedToWindow() override
 	{
 		BView::AttachedToWindow();
-		if (Window()) Window()->SetPulseRate(1000000);
 		BMessenger app(kAppSignature);
 		if (!app.IsValid()) {
 			const char* arguments[] = { "--background" };
 			be_roster->Launch(kAppSignature, 1, arguments);
 		}
 		_Query();
+		BMessage poll(kDeskbarPoll);
+		fRunner = new BMessageRunner(BMessenger(this), &poll, 1000000);
 	}
 
-	void Pulse() override { _Query(); }
+	void DetachedFromWindow() override
+	{
+		delete fRunner;
+		fRunner = nullptr;
+		BView::DetachedFromWindow();
+	}
+
+	void MessageReceived(BMessage* message) override
+	{
+		switch (message->what) {
+			case kDeskbarPoll:
+				_Query();
+				break;
+			case kMsgStatusReply:
+				fRunning = true;
+				message->FindInt32("phase", &fPhase);
+				message->FindBool("paused", &fPaused);
+				message->FindInt32("remaining", &fRemaining);
+				Invalidate();
+				break;
+			default:
+				BView::MessageReceived(message);
+		}
+	}
 
 	void Draw(BRect) override
 	{
@@ -131,9 +162,9 @@ public:
 	{
 		BMessage message(what);
 		BMessenger app(kAppSignature);
-		if (app.IsValid())
-			app.SendMessage(&message);
-		else {
+		if (app.IsValid()) {
+			app.SendMessage(&message, static_cast<BHandler*>(nullptr), 100000);
+		} else {
 			const char* arguments[] = {
 				what == kMsgPreview ? "--preview" : "--show" };
 			be_roster->Launch(kAppSignature, 1, arguments);
@@ -144,24 +175,27 @@ public:
 	{
 		BMessenger app(kAppSignature);
 		if (!app.IsValid()) {
-			fRunning = false;
-			fPhase = 0; fPaused = false; fRemaining = 0; Invalidate();
+			_SetUnavailable();
 			return;
 		}
-		BMessage request(kMsgStatus), reply;
-		if (app.SendMessage(&request, &reply, 50000, 50000) == B_OK) {
-			fRunning = true;
-			reply.FindInt32("phase", &fPhase);
-			reply.FindBool("paused", &fPaused);
-			reply.FindInt32("remaining", &fRemaining);
-			Invalidate();
-		} else if (fRunning) {
-			fRunning = false;
-			Invalidate();
-		}
+		BMessage request(kMsgStatus);
+		if (app.SendMessage(&request, this, 100000) != B_OK)
+			_SetUnavailable();
+	}
+
+	void _SetUnavailable()
+	{
+		if (!fRunning)
+			return;
+		fRunning = false;
+		fPhase = 0;
+		fPaused = false;
+		fRemaining = 0;
+		Invalidate();
 	}
 
 	BBitmap* fIcon;
+	BMessageRunner* fRunner;
 	bool fRunning;
 	int32 fPhase;
 	bool fPaused;

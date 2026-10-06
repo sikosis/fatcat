@@ -23,6 +23,7 @@ enum : uint32 {
 	kMsgRenameCat = 'fcrn',
 	kMsgToggleFavorite = 'fcfv',
 	kMsgStatus = 'fcqs',
+	kMsgStatusReply = 'fcqr',
 	kMsgTick = 'fctk',
 	kMsgQuit = 'fcqt',
 	kMsgPause = 'fcpa',

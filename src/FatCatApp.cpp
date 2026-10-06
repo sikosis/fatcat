@@ -253,7 +253,7 @@ bool FatCatApp::_Unlocked(int32 id) const
 void
 FatCatApp::_ReplyStatus(BMessage* request)
 {
-	BMessage reply(B_REPLY);
+	BMessage reply(kMsgStatusReply);
 	reply.AddString("version", kAppVersion);
 	reply.AddInt32("phase", (int32)fSession.phase);
 	reply.AddBool("paused", fSession.paused);
@@ -270,6 +270,9 @@ FatCatApp::MessageReceived(BMessage* message)
 {
 	time_t now = time(nullptr);
 	switch (message->what) {
+		case B_ABOUT_REQUESTED:
+			AboutRequested();
+			break;
 		case kMsgShow:
 			_ShowMain();
 			break;

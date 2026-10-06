@@ -75,13 +75,13 @@ MainWindow::_BuildTimerTab()
 	fStatus = new BStringView("status", "Ready when you are.");
 	fStatus->SetFont(be_bold_font);
 	fPrimary = new BButton("Start focus", new BMessage(kMsgStart));
-	fPrimary->SetTarget(this);
+	fPrimary->SetTarget(be_app_messenger);
 	fStop = new BButton("Stop", new BMessage(kMsgStop));
-	fStop->SetTarget(this);
+	fStop->SetTarget(be_app_messenger);
 	BButton* preview = new BButton("Preview cats", new BMessage(kMsgPreview));
-	preview->SetTarget(this);
+	preview->SetTarget(be_app_messenger);
 	BButton* about = new BButton("About…", new BMessage(B_ABOUT_REQUESTED));
-	about->SetTarget(this);
+	about->SetTarget(be_app_messenger);
 
 	fFocus = new BTextControl("Focus:", "", nullptr);
 	fBreak = new BTextControl("Short break:", "", nullptr);
@@ -164,7 +164,7 @@ MainWindow::_BuildCatsTab(const Session&, const Preferences&)
 		BMessage* favorite = new BMessage(kMsgToggleFavorite);
 		favorite->AddInt32("id", i);
 		fFavoriteButtons[i] = new BButton("☆ Favorite", favorite);
-		fFavoriteButtons[i]->SetTarget(this);
+		fFavoriteButtons[i]->SetTarget(be_app_messenger);
 		layout.Add(new BSeparatorView(B_HORIZONTAL))
 			.Add(fCatNameLabels[i])
 			.Add(new BStringView(nullptr, kPersonalities[i]))
@@ -185,29 +185,6 @@ MainWindow::QuitRequested()
 	Hide();
 	return false;
 }
-
-bool
-MainWindow::_SendApplicationMessage(const BMessage& source)
-{
-	BMessage message(source.what);
-	if (source.what == kMsgToggleFavorite) {
-		int32 id;
-		if (source.FindInt32("id", &id) != B_OK
-			|| message.AddInt32("id", id) != B_OK)
-			return false;
-	}
-	status_t status = be_app_messenger.SendMessage(&message,
-		static_cast<BHandler*>(nullptr), 1000000);
-	if (status == B_OK)
-		return true;
-
-	BString error("Application message failed: ");
-	error << strerror(status);
-	fStatus->SetText(error.String());
-	return false;
-}
-//---------------------------------------------------------------------------------------------------------------------------------//
-
 
 void
 MainWindow::_SendSettings()
@@ -248,13 +225,6 @@ void
 MainWindow::MessageReceived(BMessage* message)
 {
 	if (message->what == kWindowTick) { _UpdateStatus(); return; }
-	if (message->what == kMsgStart || message->what == kMsgPauseResume
-		|| message->what == kMsgStop || message->what == kMsgPreview
-		|| message->what == kMsgToggleFavorite
-		|| message->what == B_ABOUT_REQUESTED) {
-		_SendApplicationMessage(*message);
-		return;
-	}
 	if (message->what == kSave) { _SendSettings(); return; }
 	if (message->what == kSelectMonitor) {
 		const char* monitor;
@@ -295,7 +265,7 @@ MainWindow::_UpdateControls()
 	fPrimary->SetLabel(fSession.phase == Phase::Idle ? "Start focus"
 		: fSession.paused ? "Resume" : "Pause");
 	fPrimary->SetMessage(new BMessage(fSession.phase == Phase::Idle ? kMsgStart : kMsgPauseResume));
-	fPrimary->SetTarget(this);
+	fPrimary->SetTarget(be_app_messenger);
 	fStop->SetEnabled(fSession.phase != Phase::Idle);
 
 	if (!fSettingsInitialized) {
