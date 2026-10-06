@@ -19,6 +19,7 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
 
 static constexpr uint32 kSave = 'save';
 static constexpr uint32 kSelectMonitor = 'smon';
@@ -185,6 +186,29 @@ MainWindow::QuitRequested()
 	return false;
 }
 
+bool
+MainWindow::_SendApplicationMessage(const BMessage& source)
+{
+	BMessage message(source.what);
+	if (source.what == kMsgToggleFavorite) {
+		int32 id;
+		if (source.FindInt32("id", &id) != B_OK
+			|| message.AddInt32("id", id) != B_OK)
+			return false;
+	}
+	status_t status = be_app_messenger.SendMessage(&message,
+		static_cast<BHandler*>(nullptr), 1000000);
+	if (status == B_OK)
+		return true;
+
+	BString error("Application message failed: ");
+	error << strerror(status);
+	fStatus->SetText(error.String());
+	return false;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
 void
 MainWindow::_SendSettings()
 {
@@ -206,8 +230,15 @@ MainWindow::_SendSettings()
 		save.AddBool("blocking", fBlocking->Value() == B_CONTROL_ON);
 		save.AddBool("reduced_motion", fMotion->Value() == B_CONTROL_ON);
 		save.AddString("monitor", fPreferences.selectedMonitor);
-		be_app->PostMessage(&save);
-		fSaveMessage->SetText("Saved · applies to the next interval.");
+		status_t status = be_app_messenger.SendMessage(&save,
+			static_cast<BHandler*>(nullptr), 1000000);
+		if (status == B_OK)
+			fSaveMessage->SetText("Saved · applies to the next interval.");
+		else {
+			BString error("Save failed: ");
+			error << strerror(status);
+			fSaveMessage->SetText(error.String());
+		}
 		return;
 	}
 	fSaveMessage->SetText("Enter valid intervals before saving.");
@@ -221,7 +252,7 @@ MainWindow::MessageReceived(BMessage* message)
 		|| message->what == kMsgStop || message->what == kMsgPreview
 		|| message->what == kMsgToggleFavorite
 		|| message->what == B_ABOUT_REQUESTED) {
-		be_app->PostMessage(message);
+		_SendApplicationMessage(*message);
 		return;
 	}
 	if (message->what == kSave) { _SendSettings(); return; }
@@ -236,7 +267,13 @@ MainWindow::MessageReceived(BMessage* message)
 		BMessage rename(kMsgRenameCat);
 		rename.AddInt32("id", id);
 		rename.AddString("name", fCatNames[id]->Text());
-		be_app->PostMessage(&rename);
+		status_t status = be_app_messenger.SendMessage(&rename,
+			static_cast<BHandler*>(nullptr), 1000000);
+		if (status != B_OK) {
+			BString error("Rename failed: ");
+			error << strerror(status);
+			fStatus->SetText(error.String());
+		}
 		return;
 	}
 	BWindow::MessageReceived(message);
