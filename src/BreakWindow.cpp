@@ -32,7 +32,8 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 	fCountdown(nullptr)
 {
 	int32 workspace = current_workspace();
-	FatCatDebug("BreakWindow ctor frame=(%.0f,%.0f,%.0f,%.0f) workspace=%d",
+	FatCatDebug("BreakWindow ctor this=%p preview=%d blocking=%d frame=(%.0f,%.0f,%.0f,%.0f) workspace=%d",
+		(void*)this, (int)preview, (int)blocking,
 		frame.left, frame.top, frame.right, frame.bottom, (int)workspace);
 	if (workspace >= 0 && workspace < 32)
 		SetWorkspaces(uint32(1) << workspace);
