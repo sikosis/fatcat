@@ -20,6 +20,8 @@
 #include <cstdio>
 #include <cstring>
 
+static constexpr int32 kMaxScreens = 32;
+
 FatCatApp::FatCatApp()
 	:
 	BApplication(kAppSignature)
@@ -217,12 +219,17 @@ FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible)
 	BScreen screen;
 	int32 index = 1;
 	do {
+		if (!screen.IsValid())
+			break;
+		BRect frame = screen.Frame();
+		if (!frame.IsValid())
+			break;
 		BString screenName("Screen ");
 		screenName << index++;
 		if (!fPreferences.selectedMonitor.IsEmpty()
 			&& fPreferences.selectedMonitor != screenName)
 			continue;
-		BreakWindow* window = new BreakWindow(screen.Frame(), fPreferences,
+		BreakWindow* window = new BreakWindow(frame, fPreferences,
 			fSession.completedBreaks, preview, fPreferences.blockingBreak && !preview);
 		fBreakWindows.push_back(window);
 		window->Show();
@@ -230,10 +237,12 @@ FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible)
 		BMessage countdown(kMsgBreakCountdown);
 		countdown.AddString("countdown", fSession.Countdown(time(nullptr)));
 		window->PostMessage(&countdown);
-	} while (screen.SetToNext() == B_OK);
+	} while (index <= kMaxScreens && screen.SetToNext() == B_OK);
 	// Disconnected selection falls back to the first connected screen.
 	if (fBreakWindows.empty()) {
 		BScreen first;
+		if (!first.IsValid() || !first.Frame().IsValid())
+			return;
 		BreakWindow* window = new BreakWindow(first.Frame(), fPreferences,
 			fSession.completedBreaks, preview, fPreferences.blockingBreak && !preview);
 		fBreakWindows.push_back(window);
@@ -393,8 +402,13 @@ FatCatApp::MessageReceived(BMessage* message)
 					unsigned char c = clean.ByteAt(i);
 					if (c < 32 || c == 127) clean.Remove(i, 1);
 				}
-				if (!clean.IsEmpty()) fPreferences.catNames[id] = clean;
-				_SavePreferences(); _StateChanged();
+				// Only a real change may broadcast an update: the window answers
+				// every update by re-sending the name it already holds.
+				if (!clean.IsEmpty() && fPreferences.catNames[id] != clean) {
+					fPreferences.catNames[id] = clean;
+					_SavePreferences();
+					_StateChanged();
+				}
 			}
 			break;
 		}

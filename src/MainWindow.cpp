@@ -26,6 +26,7 @@ static constexpr uint32 kSave = 'save';
 static constexpr uint32 kSelectMonitor = 'smon';
 static constexpr uint32 kRenameBase = 'rn00';
 static constexpr uint32 kWindowTick = 'mwtk';
+static constexpr int32 kMaxScreens = 32;
 static const int32 kUnlocks[] = { 0, 1, 3, 6 };
 static const char* kPersonalities[] = {
 	"Sleepy · expert napper", "Curious · gentle explorer",
@@ -83,6 +84,8 @@ MainWindow::_BuildTimerTab()
 	preview->SetTarget(this);
 	BButton* about = new BButton("About…", new BMessage(B_ABOUT_REQUESTED));
 	about->SetTarget(this);
+	BButton* quit = new BButton("Quit Fat Cat", new BMessage(kMsgQuit));
+	quit->SetTarget(this);
 
 	fFocus = new BTextControl("Focus:", "", nullptr);
 	fBreak = new BTextControl("Short break:", "", nullptr);
@@ -100,12 +103,14 @@ MainWindow::_BuildTimerTab()
 	BScreen screen;
 	int32 index = 1;
 	do {
+		if (!screen.IsValid())
+			break;
 		BString label("Screen ");
 		label << index++;
 		BMessage* message = new BMessage(kSelectMonitor);
 		message->AddString("monitor", label);
 		screens->AddItem(new BMenuItem(label.String(), message));
-	} while (screen.SetToNext() == B_OK);
+	} while (index <= kMaxScreens && screen.SetToNext() == B_OK);
 	screens->SetTargetForItems(this);
 	fMonitor = new BMenuField("Show cats on:", screens);
 	fSaveMessage = new BStringView("save result", "");
@@ -116,7 +121,7 @@ MainWindow::_BuildTimerTab()
 		.SetInsets(12)
 		.Add(fStatus)
 		.AddGroup(B_HORIZONTAL, 8)
-			.Add(fPrimary).Add(fStop).Add(preview).AddGlue().Add(about)
+			.Add(fPrimary).Add(fStop).Add(preview).AddGlue().Add(quit).Add(about)
 		.End()
 		.Add(new BSeparatorView(B_HORIZONTAL))
 		.AddGrid(8, 8)
@@ -271,7 +276,7 @@ MainWindow::MessageReceived(BMessage* message)
 	}
 	if (message->what == kMsgStart || message->what == kMsgPauseResume
 		|| message->what == kMsgStop || message->what == kMsgPreview
-		|| message->what == kMsgToggleFavorite
+		|| message->what == kMsgToggleFavorite || message->what == kMsgQuit
 		|| message->what == B_ABOUT_REQUESTED) {
 		_PostApplicationMessage(*message);
 		return;
@@ -370,7 +375,10 @@ MainWindow::_UpdateControls()
 		BString labelText = fPreferences.catNames[i];
 		if (!unlocked) labelText << " — arrives after " << kUnlocks[i] << " completed breaks";
 		fCatNameLabels[i]->SetText(labelText);
-		if (!fCatNames[i]->TextView()->IsFocus())
+		// SetText() re-invokes the modification message, so only write when the
+		// value actually differs or the update round trip never settles.
+		if (!fCatNames[i]->TextView()->IsFocus()
+			&& strcmp(fCatNames[i]->Text(), fPreferences.catNames[i].String()) != 0)
 			fCatNames[i]->SetText(fPreferences.catNames[i]);
 		fCatNames[i]->SetEnabled(unlocked);
 		fFavoriteButtons[i]->SetEnabled(unlocked);

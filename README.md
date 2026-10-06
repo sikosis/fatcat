@@ -75,7 +75,7 @@ target remains available for development builds outside package management.
 
 ## Use
 
-The **Timer** tab starts, pauses/resumes, and stops the timer; previews the sanctuary; and configures intervals, display, blocking, and motion. Interval edits affect the next phase, not the phase currently in progress.
+The **Timer** tab starts, pauses/resumes, and stops the timer; previews the sanctuary; and configures intervals, display, blocking, and motion. Interval edits affect the next phase, not the phase currently in progress. **Quit Fat Cat** exits the background application; the window's close button only hides it, so the Deskbar item stays available for the next launch.
 
 The **Cats** tab shows collection progress. Names save when Enter is pressed or the field loses focus. If any unlocked cats are favorited, only favorites visit during real breaks; previews always show all four cats.
 
