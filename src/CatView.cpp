@@ -1,5 +1,7 @@
 #include "CatView.h"
 
+#include "Debug.h"
+
 #include <Message.h>
 #include <TranslationUtils.h>
 
@@ -234,6 +236,10 @@ CatView::MessageReceived(BMessage* message)
 void
 CatView::Draw(BRect update)
 {
+	static int sDrawCount = 0;
+	if (++sDrawCount <= 3)
+		FatCatDebug("CatView::Draw #%d update=(%.0f,%.0f,%.0f,%.0f)",
+			sDrawCount, update.left, update.top, update.right, update.bottom);
 	SetDrawingMode(B_OP_COPY);
 	if (fBackdrop)
 		DrawBitmap(fBackdrop.get(), update, update);

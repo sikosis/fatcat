@@ -32,6 +32,8 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 	fCountdown(nullptr)
 {
 	int32 workspace = current_workspace();
+	FatCatDebug("BreakWindow ctor frame=(%.0f,%.0f,%.0f,%.0f) workspace=%d",
+		frame.left, frame.top, frame.right, frame.bottom, (int)workspace);
 	if (workspace >= 0 && workspace < 32)
 		SetWorkspaces(uint32(1) << workspace);
 	AddShortcut(B_ESCAPE, 0, new BMessage(preview ? kMsgDismiss : kMsgSkipBreak), this);
@@ -125,6 +127,12 @@ BreakWindow::QuitRequested()
 void
 BreakWindow::MessageReceived(BMessage* message)
 {
+	if (message->what == B_WINDOW_ACTIVATED)
+		FatCatDebug("BreakWindow: WINDOW_ACTIVATED");
+	if (message->what == B_WORKSPACE_ACTIVATED)
+		FatCatDebug("BreakWindow: WORKSPACE_ACTIVATED");
+	if (message->what == B_MOUSE_DOWN)
+		FatCatDebug("BreakWindow: MOUSE_DOWN");
 	if (message->what == kMsgBreakCountdown) {
 		const char* value;
 		if (!fPreview && message->FindString("countdown", &value) == B_OK)
