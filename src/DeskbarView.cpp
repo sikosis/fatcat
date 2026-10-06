@@ -1,8 +1,11 @@
 #include "Messages.h"
 
 #include <Archivable.h>
+#include <Bitmap.h>
+#include <IconUtils.h>
 #include <InterfaceDefs.h>
 #include <Message.h>
+#include <Resources.h>
 #include <Roster.h>
 #include <String.h>
 #include <View.h>
@@ -11,21 +14,28 @@
 #include <algorithm>
 #include <cstdio>
 
+static const int32 kResourceAnchor = 0;
+
 class FatCatDeskbarView : public BView {
 public:
 	FatCatDeskbarView(BRect frame)
 		:
 		BView(frame, kDeskbarItemName, B_FOLLOW_NONE, B_WILL_DRAW | B_PULSE_NEEDED),
-		fPhase(0), fPaused(false), fRemaining(0)
+		fIcon(nullptr), fRunning(false), fPhase(0), fPaused(false), fRemaining(0)
 	{
 		SetViewColor(B_TRANSPARENT_COLOR);
+		_LoadIcon();
 	}
 
 	FatCatDeskbarView(BMessage* archive)
 		:
-		BView(archive), fPhase(0), fPaused(false), fRemaining(0)
+		BView(archive), fIcon(nullptr), fRunning(false), fPhase(0), fPaused(false),
+		fRemaining(0)
 	{
+		_LoadIcon();
 	}
+
+	~FatCatDeskbarView() override { delete fIcon; }
 
 	static BArchivable* Instantiate(BMessage* archive)
 	{
@@ -59,10 +69,23 @@ public:
 
 	void Draw(BRect) override
 	{
+		if (fIcon != nullptr) {
+			SetDrawingMode(B_OP_ALPHA);
+			SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
+			DrawBitmap(fIcon, BPoint(2, std::max(0.0f,
+				(Bounds().Height() - 16.0f) / 2.0f)));
+			SetDrawingMode(B_OP_COPY);
+		}
+		SetHighColor(fRunning ? rgb_color { 52, 199, 89, 255 }
+			: rgb_color { 130, 130, 130, 255 });
+		FillEllipse(BPoint(16, Bounds().Height() - 4), 2, 2);
+
 		SetHighUIColor(B_CONTROL_TEXT_COLOR);
 		SetLowColor(ViewColor());
-		BString text("🐈 ");
-		if (fPhase == 0)
+		BString text;
+		if (!fRunning)
+			text = "Off";
+		else if (fPhase == 0)
 			text << "Pomodoro";
 		else {
 			if (fPaused) text << "Ⅱ ";
@@ -73,7 +96,8 @@ public:
 		}
 		font_height height;
 		GetFontHeight(&height);
-		DrawString(text.String(), BPoint(4, (Bounds().Height() + height.ascent - height.descent) / 2));
+		DrawString(text.String(), BPoint(23,
+			(Bounds().Height() + height.ascent - height.descent) / 2));
 	}
 
 	void MouseDown(BPoint) override
@@ -85,6 +109,25 @@ public:
 	}
 
 	private:
+	void _LoadIcon()
+	{
+		BResources resources;
+		if (resources.SetToImage(&kResourceAnchor) != B_OK)
+			return;
+		size_t size = 0;
+		const uint8* data = static_cast<const uint8*>(
+			resources.LoadResource('VICN', 101, &size));
+		if (data == nullptr || size == 0)
+			return;
+
+		BBitmap* icon = new BBitmap(BRect(0, 0, 15, 15), B_RGBA32);
+		if (icon->InitCheck() == B_OK
+			&& BIconUtils::GetVectorIcon(data, size, icon) == B_OK) {
+			fIcon = icon;
+		} else
+			delete icon;
+	}
+
 	void _Send(uint32 what)
 	{
 		BMessage message(what);
@@ -102,18 +145,25 @@ public:
 	{
 		BMessenger app(kAppSignature);
 		if (!app.IsValid()) {
+			fRunning = false;
 			fPhase = 0; fPaused = false; fRemaining = 0; Invalidate();
 			return;
 		}
 		BMessage request(kMsgStatus), reply;
 		if (app.SendMessage(&request, &reply, 50000, 50000) == B_OK) {
+			fRunning = true;
 			reply.FindInt32("phase", &fPhase);
 			reply.FindBool("paused", &fPaused);
 			reply.FindInt32("remaining", &fRemaining);
 			Invalidate();
+		} else if (fRunning) {
+			fRunning = false;
+			Invalidate();
 		}
 	}
 
+	BBitmap* fIcon;
+	bool fRunning;
 	int32 fPhase;
 	bool fPaused;
 	int32 fRemaining;

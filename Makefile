@@ -30,7 +30,7 @@ $(CLI): src/control.cpp src/Messages.h FatCatControl.rsrc
 FatCat.rsrc: FatCat.rdef artwork/fatcat-icon.hvif
 	rc -o $@ $<
 
-FatCatDeskbar.rsrc: FatCatDeskbar.rdef
+FatCatDeskbar.rsrc: FatCatDeskbar.rdef artwork/fatcat-icon.hvif
 	rc -o $@ $<
 
 FatCatControl.rsrc: FatCatControl.rdef

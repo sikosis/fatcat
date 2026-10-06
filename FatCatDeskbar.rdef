@@ -1,1 +1,3 @@
 resource app_signature "application/x-vnd.arkane-FatCatDeskbar";
+
+resource(101, "BEOS:ICON") #'VICN' import "artwork/fatcat-icon.hvif";

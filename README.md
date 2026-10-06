@@ -11,7 +11,10 @@ A native Haiku recreation of [Fat Cat Pomodoro](https://github.com/jeremielumand
 ## Features
 
 - Focus, short-break, and long-break phases. Defaults are 25 minutes focus, 5 minutes short break, 15 minutes long break, and one long break after every 4 completed focus sessions.
-- A live Deskbar readout. Primary-click opens Fat Cat; secondary-click starts a safe 15-second preview.
+- A live Deskbar readout with the Fat Cat HVIF icon. A green dot means the
+  background service is responding; a grey **Off** state means it is stopped.
+  Primary-click launches or reveals Fat Cat, and secondary-click starts a safe
+  15-second preview.
 - Fat Cat runs as a background application in Deskbar and keeps working after
   the settings window closes.
 - An original cat-and-Pomodoro HVIF icon is embedded in `fatcat.app` and displayed in its native About box.
