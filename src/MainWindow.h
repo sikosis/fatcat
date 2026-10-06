@@ -3,7 +3,10 @@
 #include "Preferences.h"
 #include "Session.h"
 
+#include <MessageRunner.h>
 #include <Window.h>
+
+#include <memory>
 
 class BButton;
 class BCheckBox;
@@ -17,7 +20,6 @@ public:
 	MainWindow(const Session& session, const Preferences& preferences);
 	bool QuitRequested() override;
 	void MessageReceived(BMessage* message) override;
-	void Pulse() override;
 	void Update(const Session& session, const Preferences& preferences,
 		const BString& persistenceError);
 
@@ -46,5 +48,6 @@ private:
 	BStringView* fCatNameLabels[4];
 	BTextControl* fCatNames[4];
 	BButton* fFavoriteButtons[4];
+	std::unique_ptr<BMessageRunner> fTicker;
 	bool fSettingsInitialized;
 };

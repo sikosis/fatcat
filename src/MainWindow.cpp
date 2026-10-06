@@ -10,6 +10,7 @@
 #include <Menu.h>
 #include <MenuField.h>
 #include <MenuItem.h>
+#include <Messenger.h>
 #include <Screen.h>
 #include <SeparatorView.h>
 #include <StringView.h>
@@ -22,6 +23,7 @@
 static constexpr uint32 kSave = 'save';
 static constexpr uint32 kSelectMonitor = 'smon';
 static constexpr uint32 kRenameBase = 'rn00';
+static constexpr uint32 kWindowTick = 'mwtk';
 static const int32 kUnlocks[] = { 0, 1, 3, 6 };
 static const char* kPersonalities[] = {
 	"Sleepy · expert napper", "Curious · gentle explorer",
@@ -60,7 +62,8 @@ MainWindow::MainWindow(const Session& session, const Preferences& preferences)
 	tabs->TabAt(1)->SetLabel("Cats");
 	BLayoutBuilder::Group<>(this, B_VERTICAL).SetInsets(12).Add(tabs);
 	_UpdateControls();
-	SetPulseRate(1000000);
+	BMessage tick(kWindowTick);
+	fTicker = std::make_unique<BMessageRunner>(BMessenger(this), &tick, 1000000);
 }
 
 BView*
@@ -213,6 +216,7 @@ MainWindow::_SendSettings()
 void
 MainWindow::MessageReceived(BMessage* message)
 {
+	if (message->what == kWindowTick) { _UpdateStatus(); return; }
 	if (message->what == kSave) { _SendSettings(); return; }
 	if (message->what == kSelectMonitor) {
 		const char* monitor;
@@ -230,15 +234,6 @@ MainWindow::MessageReceived(BMessage* message)
 	}
 	BWindow::MessageReceived(message);
 }
-
-void
-MainWindow::Pulse()
-{
-	_UpdateStatus();
-}
-//---------------------------------------------------------------------------------------------------------------------------------//
-
-
 void
 MainWindow::Update(const Session& session, const Preferences& preferences,
 	const BString& persistenceError)
