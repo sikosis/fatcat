@@ -50,6 +50,8 @@ quit Deskbar
 ```
 
 Deskbar is restarted automatically by Haiku. Launch `~/config/non-packaged/apps/FatCat/fatcat.app` directly if you want to open the settings window before restarting Deskbar.
+While Fat Cat is running it checks for its Deskbar item every five seconds, so
+the icon returns automatically after Deskbar is restarted.
 
 ## Packaging
 

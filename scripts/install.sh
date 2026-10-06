@@ -13,6 +13,7 @@ if command -v killall >/dev/null 2>&1; then
 fi
 if command -v desklink >/dev/null 2>&1; then
 	desklink --remove=FatCatDeskbar >/dev/null 2>&1 || true
+	sleep 1
 fi
 
 cp fatcat.app "$app_dir/fatcat.app"
