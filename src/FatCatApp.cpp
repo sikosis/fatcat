@@ -183,6 +183,8 @@ void FatCatApp::_StateChanged() {
 void FatCatApp::_ShowMain() {
 	if (!fMainWindow)
 		return;
+	if (fPreviewing)
+		_CloseOverlays(); // a preview must not linger behind the settings window
 	fMainWindow->PostUpdate(fSession, fPreferences, fPersistenceError);
 	fMainWindow->PostMessage(kMsgWindowShow);
 }
