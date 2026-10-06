@@ -189,6 +189,9 @@ void FatCatApp::_ShowMain() {
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 void FatCatApp::_CloseOverlays(bool restoreMain) {
+	FatCatDebug("_CloseOverlays: restore=%d count=%d pending=%d",
+		(int)restoreMain, (int)fBreakWindows.size(),
+		(int)fOverlayRequestPending);
 	bool showMain = restoreMain && fRestoreMainAfterOverlay;
 	if (fOverlayRequestPending) {
 		fOverlayRequestPending = false;
@@ -251,6 +254,9 @@ void FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible) {
 		fBreakWindows.push_back(window);
 		window->Show();
 		window->Activate();
+		FatCatDebug("  window shown frame=(%.0f,%.0f,%.0f,%.0f) hidden=%d",
+			frame.left, frame.top, frame.right, frame.bottom,
+			(int)window->IsHidden());
 		BMessage countdown(kMsgBreakCountdown);
 		countdown.AddString("countdown", fSession.Countdown(time(nullptr)));
 		window->PostMessage(&countdown);

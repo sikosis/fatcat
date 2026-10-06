@@ -1,6 +1,7 @@
 #include "BreakWindow.h"
 
 #include "CatView.h"
+#include "Debug.h"
 #include "Messages.h"
 
 #include <Application.h>
@@ -100,6 +101,8 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 void
 BreakWindow::_SendAction(uint32 what)
 {
+	FatCatDebug("BreakWindow action what=0x%x already=%d",
+		(unsigned)what, (int)fActionSent);
 	if (fActionSent)
 		return;
 	fActionSent = true;
@@ -113,6 +116,7 @@ BreakWindow::_SendAction(uint32 what)
 bool
 BreakWindow::QuitRequested()
 {
+	FatCatDebug("BreakWindow QuitRequested");
 	return true;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
