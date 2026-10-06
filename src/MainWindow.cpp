@@ -190,7 +190,8 @@ MainWindow::QuitRequested()
 bool
 MainWindow::_PostApplicationMessage(const BMessage& message)
 {
-	status_t status = be_app->PostMessage(&message);
+	BMessage queuedMessage(message);
+	status_t status = be_app->PostMessage(&queuedMessage);
 	if (status == B_OK)
 		return true;
 
