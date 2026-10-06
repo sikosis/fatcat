@@ -26,6 +26,7 @@ public:
 private:
 	BView* _BuildTimerTab();
 	BView* _BuildCatsTab(const Session& session, const Preferences& preferences);
+	bool _PostApplicationMessage(const BMessage& message);
 	void _SendSettings();
 	void _UpdateControls();
 	void _UpdateStatus();

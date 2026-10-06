@@ -322,10 +322,6 @@ FatCatApp::MessageReceived(BMessage* message)
 			_StateChanged();
 			break;
 		case kMsgTick: {
-			if (++fDeskbarCheckTicks >= 5) {
-				fDeskbarCheckTicks = 0;
-				_EnsureDeskbarItem();
-			}
 			Phase before = fSession.phase;
 			bool completedBreak = false;
 			if (fSession.Tick(now, completedBreak)) {

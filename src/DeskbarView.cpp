@@ -24,8 +24,8 @@ public:
 	FatCatDeskbarView(BRect frame)
 		:
 		BView(frame, kDeskbarItemName, B_FOLLOW_NONE, B_WILL_DRAW),
-		fIcon(nullptr), fRunner(nullptr), fRunning(false), fPhase(0),
-		fPaused(false), fRemaining(0)
+		fIcon(nullptr), fRunner(nullptr), fRunning(false), fWaitingForReply(false),
+		fWaitTicks(0), fPhase(0), fPaused(false), fRemaining(0)
 	{
 		SetViewColor(B_TRANSPARENT_COLOR);
 		_LoadIcon();
@@ -34,7 +34,8 @@ public:
 	FatCatDeskbarView(BMessage* archive)
 		:
 		BView(archive), fIcon(nullptr), fRunner(nullptr), fRunning(false),
-		fPhase(0), fPaused(false), fRemaining(0)
+		fWaitingForReply(false), fWaitTicks(0), fPhase(0), fPaused(false),
+		fRemaining(0)
 	{
 		_LoadIcon();
 	}
@@ -86,6 +87,8 @@ public:
 				_Query();
 				break;
 			case kMsgStatusReply:
+				fWaitingForReply = false;
+				fWaitTicks = 0;
 				fRunning = true;
 				message->FindInt32("phase", &fPhase);
 				message->FindBool("paused", &fPaused);
@@ -173,13 +176,25 @@ public:
 
 	void _Query()
 	{
+		if (fWaitingForReply) {
+			if (++fWaitTicks >= 3) {
+				fWaitingForReply = false;
+				fWaitTicks = 0;
+				_SetUnavailable();
+			}
+			return;
+		}
+
 		BMessenger app(kAppSignature);
 		if (!app.IsValid()) {
 			_SetUnavailable();
 			return;
 		}
 		BMessage request(kMsgStatus);
-		if (app.SendMessage(&request, this, 100000) != B_OK)
+		if (app.SendMessage(&request, this, 100000) == B_OK) {
+			fWaitingForReply = true;
+			fWaitTicks = 0;
+		} else
 			_SetUnavailable();
 	}
 
@@ -197,6 +212,8 @@ public:
 	BBitmap* fIcon;
 	BMessageRunner* fRunner;
 	bool fRunning;
+	bool fWaitingForReply;
+	int32 fWaitTicks;
 	int32 fPhase;
 	bool fPaused;
 	int32 fRemaining;

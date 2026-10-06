@@ -105,8 +105,7 @@ BreakWindow::_SendAction(uint32 what)
 	fActionSent = true;
 	Hide();
 	BMessage message(what);
-	be_app_messenger.SendMessage(&message, static_cast<BHandler*>(nullptr),
-		1000000);
+	be_app->PostMessage(&message);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 

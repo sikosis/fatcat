@@ -39,7 +39,6 @@ private:
 	MainWindow* fMainWindow = nullptr;
 	std::vector<BreakWindow*> fBreakWindows;
 	std::unique_ptr<BMessageRunner> fTicker;
-	int32 fDeskbarCheckTicks = 0;
 	bool fPreviewing = false;
 	bool fRestoreMainAfterOverlay = false;
 	bool fCommandLineOnly = false;

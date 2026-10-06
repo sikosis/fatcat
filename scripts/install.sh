@@ -16,7 +16,13 @@ if command -v killall >/dev/null 2>&1; then
 	killall -9 fatcat.app >/dev/null 2>&1 || true
 fi
 if command -v desklink >/dev/null 2>&1; then
-	desklink --remove=FatCatDeskbar >/dev/null 2>&1 || true
+	# Remove every stale copy left by older builds that repeatedly installed
+	# the replicant. A fixed bound avoids depending on desklink's exit status.
+	remove_attempt=0
+	while [ "$remove_attempt" -lt 32 ]; do
+		desklink --remove=FatCatDeskbar >/dev/null 2>&1 || true
+		remove_attempt=$((remove_attempt + 1))
+	done
 	sleep 1
 fi
 
