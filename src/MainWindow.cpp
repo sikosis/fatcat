@@ -60,6 +60,7 @@ MainWindow::MainWindow(const Session& session, const Preferences& preferences)
 	tabs->TabAt(1)->SetLabel("Cats");
 	BLayoutBuilder::Group<>(this, B_VERTICAL).SetInsets(12).Add(tabs);
 	_UpdateControls();
+	SetPulseRate(1000000);
 }
 
 BView*
@@ -231,6 +232,14 @@ MainWindow::MessageReceived(BMessage* message)
 }
 
 void
+MainWindow::Pulse()
+{
+	_UpdateStatus();
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void
 MainWindow::Update(const Session& session, const Preferences& preferences,
 	const BString& persistenceError)
 {
@@ -243,17 +252,7 @@ MainWindow::Update(const Session& session, const Preferences& preferences,
 void
 MainWindow::_UpdateControls()
 {
-	time_t now = time(nullptr);
-	BString status;
-	if (fSession.phase == Phase::Idle)
-		status = "Ready when you are.";
-	else {
-		if (fSession.paused) status << "Paused · ";
-		else status << (fSession.phase == Phase::Focus ? "Focus · " : "Break · ");
-		status << fSession.Countdown(now);
-	}
-	if (!fError.IsEmpty()) status << "  ⚠ " << fError;
-	fStatus->SetText(status);
+	_UpdateStatus();
 	fPrimary->SetLabel(fSession.phase == Phase::Idle ? "Start focus"
 		: fSession.paused ? "Resume" : "Pause");
 	fPrimary->SetMessage(new BMessage(fSession.phase == Phase::Idle ? kMsgStart : kMsgPauseResume));
@@ -295,3 +294,20 @@ MainWindow::_UpdateControls()
 		fFavoriteButtons[i]->SetLabel(fPreferences.IsFavorite(i) ? "★ Favorite" : "☆ Favorite");
 	}
 }
+
+void
+MainWindow::_UpdateStatus()
+{
+	time_t now = time(nullptr);
+	BString status;
+	if (fSession.phase == Phase::Idle)
+		status = "Ready when you are.";
+	else {
+		if (fSession.paused) status << "Paused · ";
+		else status << (fSession.phase == Phase::Focus ? "Focus · " : "Break · ");
+		status << fSession.Countdown(now);
+	}
+	if (!fError.IsEmpty()) status << "  ⚠ " << fError;
+	fStatus->SetText(status);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//

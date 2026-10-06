@@ -47,7 +47,7 @@ FatCatApp::ReadyToRun()
 	if (!fCommandLineOnly)
 		fMainWindow->Show();
 	BMessage tick(kMsgTick);
-	fTicker = std::make_unique<BMessageRunner>(BMessenger(this), &tick, 250000);
+	fTicker = std::make_unique<BMessageRunner>(BMessenger(this), &tick, 1000000);
 	if (fSession.phase == Phase::Break && !fSession.paused)
 		_ShowOverlay(false);
 }
@@ -356,10 +356,6 @@ FatCatApp::MessageReceived(BMessage* message)
 				}
 				_StateChanged();
 			} else {
-				if (fMainWindow && fMainWindow->Lock()) {
-					fMainWindow->Update(fSession, fPreferences, fPersistenceError);
-					fMainWindow->Unlock();
-				}
 				for (BreakWindow* window : fBreakWindows)
 					window->SetCountdown(fSession.Countdown(now));
 			}

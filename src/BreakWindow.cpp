@@ -64,9 +64,9 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 	prompt->SetAlignment(B_ALIGN_CENTER);
 	BButton* close = new BButton(preview ? "Close preview" : "Skip break",
 		new BMessage(preview ? kMsgDismiss : kMsgSkipBreak));
-	close->SetTarget(be_app);
+	close->SetTarget(this);
 	BButton* pause = new BButton("Pause timer", new BMessage(kMsgPauseResume));
-	pause->SetTarget(be_app);
+	pause->SetTarget(this);
 	if (preview)
 		pause->Hide();
 
@@ -113,8 +113,7 @@ BreakWindow::_SendAction(uint32 what)
 bool
 BreakWindow::QuitRequested()
 {
-	_SendAction(fPreview ? kMsgDismiss : kMsgSkipBreak);
-	return false;
+	return true;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
