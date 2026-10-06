@@ -17,7 +17,7 @@ A native Haiku recreation of [Fat Cat Pomodoro](https://github.com/jeremielumand
   secondary-click starts a safe 15-second preview.
 - Fat Cat runs as a background application in Deskbar and keeps working after
   the settings window closes.
-- An original cat-and-Pomodoro HVIF icon is embedded in `fatcat.app` and displayed in its native About box.
+- An original cat-and-Pomodoro HVIF icon is embedded in `fatcat` and displayed in its native About box.
 - Persistent, suspend-aware timers. Paused timers, interval progress, settings, collection progress, names, and favorites survive restarts.
 - Four cats with distinct personalities and six activities: walk, stretch, groom, yawn, loaf, and sleep.
 - Cat unlocks match the original: Mochi immediately, Miso after 1 completed break, Patches after 3, and Pepper after 6.
@@ -39,7 +39,7 @@ make install
 
 The install target places:
 
-- `fatcat.app` and the sprites in `~/config/non-packaged/apps/FatCat/`;
+- `fatcat` and the sprites in `~/config/non-packaged/apps/FatCat/`;
 - `fatcat-cli` in `~/config/non-packaged/bin/`;
 - the replicant in `~/config/non-packaged/add-ons/deskbar/FatCatDeskbar.so`.
 
@@ -49,7 +49,7 @@ Restart Deskbar once if the item does not appear immediately:
 quit Deskbar
 ```
 
-Deskbar is restarted automatically by Haiku. Launch `~/config/non-packaged/apps/FatCat/fatcat.app` directly if you want to open the settings window before restarting Deskbar.
+Deskbar is restarted automatically by Haiku. Launch `~/config/non-packaged/apps/FatCat/fatcat` directly if you want to open the settings window before restarting Deskbar.
 Fat Cat installs its Deskbar item once at application startup. Relaunch Fat Cat
 after manually restarting Deskbar to restore the item.
 

@@ -1,6 +1,6 @@
 *.o
 *.rsrc
-fatcat.app
+/fatcat
 fatcat-cli
 FatCatDeskbar.so
 tests/session_test

@@ -1,4 +1,4 @@
-NAME := fatcat.app
+NAME := fatcat
 CLI := fatcat-cli
 CXX ?= g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -O2 -Isrc

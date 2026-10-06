@@ -6,9 +6,9 @@ if [ -x "${HOME}/config/non-packaged/bin/fatcat-cli" ]; then
 fi
 sleep 1
 if command -v killall >/dev/null 2>&1; then
-	killall fatcat.app >/dev/null 2>&1 || true
+	killall fatcat >/dev/null 2>&1 || true
 	sleep 1
-	killall -9 fatcat.app >/dev/null 2>&1 || true
+	killall -9 fatcat >/dev/null 2>&1 || true
 fi
 if command -v desklink >/dev/null 2>&1; then
 	remove_attempt=0

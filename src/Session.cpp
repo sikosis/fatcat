@@ -3,39 +3,37 @@
 #include <algorithm>
 #include <cstdio>
 
-int32
-Session::Remaining(time_t now) const
-{
+int32 Session::Remaining(time_t now) const {
 	if (phase == Phase::Idle)
 		return 0;
 	if (paused)
 		return remainingSeconds;
 	return std::clamp<int64>(deadline - now, 0, durationSeconds);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-BString
-Session::Countdown(time_t now) const
-{
+
+BString Session::Countdown(time_t now) const {
 	int32 seconds = Remaining(now);
 	char value[16];
 	snprintf(value, sizeof(value), "%02ld:%02ld", (long)(seconds / 60),
 		(long)(seconds % 60));
 	return value;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-Session::_Enter(Phase next, int32 minutes, time_t now)
-{
+
+void Session::_Enter(Phase next, int32 minutes, time_t now) {
 	phase = next;
 	paused = false;
 	durationSeconds = minutes * 60;
 	remainingSeconds = durationSeconds;
 	deadline = now + durationSeconds;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-bool
-Session::Tick(time_t now, bool& completedBreak)
-{
+
+bool Session::Tick(time_t now, bool& completedBreak) {
 	completedBreak = false;
 	if (phase == Phase::Idle || paused)
 		return false;
@@ -60,22 +58,25 @@ Session::Tick(time_t now, bool& completedBreak)
 	}
 	return true;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void Session::Start(time_t now) { if (phase == Phase::Idle) _Enter(Phase::Focus, focusMinutes, now); }
+void Session::Start(time_t now) {
+	if (phase == Phase::Idle) _Enter(Phase::Focus, focusMinutes, now);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-Session::Stop()
-{
+
+void Session::Stop() {
 	phase = Phase::Idle;
 	paused = false;
 	deadline = 0;
 	remainingSeconds = 0;
 	durationSeconds = 0;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-Session::Pause(time_t now)
-{
+
+void Session::Pause(time_t now) {
 	bool ignored;
 	Tick(now, ignored);
 	if (phase == Phase::Idle || paused)
@@ -84,26 +85,26 @@ Session::Pause(time_t now)
 	deadline = 0;
 	paused = true;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-Session::Resume(time_t now)
-{
+
+void Session::Resume(time_t now) {
 	if (!paused)
 		return;
 	paused = false;
 	deadline = now + remainingSeconds;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-Session::SkipBreak(time_t now)
-{
+
+void Session::SkipBreak(time_t now) {
 	if (phase == Phase::Break)
 		_Enter(Phase::Focus, focusMinutes, now);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-bool
-Session::Configure(int32 focus, int32 rest, int32 longRest, int32 every)
-{
+
+bool Session::Configure(int32 focus, int32 rest, int32 longRest, int32 every) {
 	if (focus < 1 || focus > 180 || rest < 1 || rest > 180
 		|| longRest < 1 || longRest > 180 || every < 2 || every > 12)
 		return false;
@@ -113,10 +114,10 @@ Session::Configure(int32 focus, int32 rest, int32 longRest, int32 every)
 	longBreakEvery = every;
 	return true;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-Session::Archive(BMessage& into) const
-{
+
+void Session::Archive(BMessage& into) const {
 	into.MakeEmpty();
 	into.AddInt32("version", 1);
 	into.AddInt32("phase", (int32)phase);
@@ -131,10 +132,10 @@ Session::Archive(BMessage& into) const
 	into.AddInt32("completed_focus", completedFocus);
 	into.AddInt32("completed_breaks", completedBreaks);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-bool
-Session::Restore(const BMessage& from, time_t now)
-{
+
+bool Session::Restore(const BMessage& from, time_t now) {
 	int32 version, phaseValue, focus, rest, longRest, every, completedF,
 		completedB, remaining, duration;
 	int64 savedDeadline;
@@ -185,3 +186,4 @@ Session::Restore(const BMessage& from, time_t now)
 	Tick(now, ignored); // Exactly one overdue transition; never replay missed cycles.
 	return true;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//

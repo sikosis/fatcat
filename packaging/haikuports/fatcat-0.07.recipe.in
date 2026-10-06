@@ -38,13 +38,13 @@ BUILD()
 INSTALL()
 {
 	mkdir -p $appsDir/FatCat/assets $binDir $addOnsDir/deskbar $docDir
-	cp fatcat.app $appsDir/FatCat/fatcat.app
+	cp fatcat $appsDir/FatCat/fatcat
 	cp assets/cat-*.png $appsDir/FatCat/assets/
 	cp fatcat-cli $binDir/fatcat-cli
 	cp FatCatDeskbar.so $addOnsDir/deskbar/FatCatDeskbar.so
 	cp README.md LICENSE $docDir/
 
-	addAppDeskbarSymlink $appsDir/FatCat/fatcat.app "Fat Cat"
+	addAppDeskbarSymlink $appsDir/FatCat/fatcat "Fat Cat"
 }
 
 TEST()
