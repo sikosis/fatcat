@@ -17,7 +17,7 @@
 
 static constexpr uint32 kPreviewTick = 'pvtk';
 
-BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedBreaks,
+BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 completedBreaks,
 	bool preview, bool blocking)
 	:
 	BWindow(frame, "Fat Cat break", B_NO_BORDER_WINDOW_LOOK,
@@ -42,7 +42,7 @@ BreakWindow::BreakWindow(BRect frame, Preferences* preferences, int32 completedB
 		backdrop = nullptr;
 	}
 	CatView* cats = new CatView(preferences, completedBreaks, preview,
-		preferences->reducedMotion, backdrop);
+		preferences.reducedMotion, backdrop);
 	cats->ResizeTo(Bounds().Width(), Bounds().Height());
 	cats->SetResizingMode(B_FOLLOW_ALL);
 	AddChild(cats);
@@ -121,6 +121,16 @@ BreakWindow::QuitRequested()
 void
 BreakWindow::MessageReceived(BMessage* message)
 {
+	if (message->what == kMsgBreakCountdown) {
+		const char* value;
+		if (!fPreview && message->FindString("countdown", &value) == B_OK)
+			fCountdown->SetText(value);
+		return;
+	}
+	if (message->what == kMsgBreakClose) {
+		Quit();
+		return;
+	}
 	if (message->what == kMsgDismiss || message->what == kMsgSkipBreak
 		|| message->what == kMsgPauseResume) {
 		_SendAction(message->what);
@@ -137,16 +147,5 @@ BreakWindow::MessageReceived(BMessage* message)
 		return;
 	}
 	BWindow::MessageReceived(message);
-}
-//---------------------------------------------------------------------------------------------------------------------------------//
-
-
-void
-BreakWindow::SetCountdown(const BString& value)
-{
-	if (!fPreview && Lock()) {
-		fCountdown->SetText(value.String());
-		Unlock();
-	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------//

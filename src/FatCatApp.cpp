@@ -155,12 +155,9 @@ void
 FatCatApp::_StateChanged()
 {
 	_SaveSession();
-	if (fMainWindow && fMainWindow->Lock()) {
-		fMainWindow->Update(fSession, fPreferences, fPersistenceError);
-		fMainWindow->Unlock();
-	}
-	for (BreakWindow* window : fBreakWindows)
-		window->SetCountdown(fSession.Countdown(time(nullptr)));
+	if (fMainWindow)
+		fMainWindow->PostUpdate(fSession, fPreferences, fPersistenceError);
+	_UpdateBreakCountdown(fSession.Countdown(time(nullptr)));
 }
 
 void
@@ -168,28 +165,21 @@ FatCatApp::_ShowMain()
 {
 	if (!fMainWindow)
 		return;
-	if (fMainWindow->Lock()) {
-		fMainWindow->Update(fSession, fPreferences, fPersistenceError);
-		int32 workspace = current_workspace();
-		if (workspace >= 0 && workspace < 32)
-			fMainWindow->SetWorkspaces(uint32(1) << workspace);
-		fMainWindow->Unlock();
-	}
-	if (fMainWindow->IsHidden())
-		fMainWindow->Show();
-	fMainWindow->Activate();
+	fMainWindow->PostUpdate(fSession, fPreferences, fPersistenceError);
+	fMainWindow->PostMessage(kMsgWindowShow);
 }
 
 void
 FatCatApp::_CloseOverlays(bool restoreMain)
 {
 	bool showMain = restoreMain && fRestoreMainAfterOverlay;
-	fRestoreMainAfterOverlay = false;
-	for (BreakWindow* window : fBreakWindows) {
-		if (window->Lock()) {
-			window->Quit();
-		}
+	if (fOverlayRequestPending) {
+		fOverlayRequestPending = false;
+		fOverlayRequestId++;
 	}
+	fRestoreMainAfterOverlay = false;
+	for (BreakWindow* window : fBreakWindows)
+		window->PostMessage(kMsgBreakClose);
 	fBreakWindows.clear();
 	fPreviewing = false;
 	if (showMain)
@@ -201,18 +191,27 @@ FatCatApp::_CloseOverlays(bool restoreMain)
 void
 FatCatApp::_ShowOverlay(bool preview)
 {
+	if (fOverlayRequestPending)
+		return;
 	_CloseOverlays(false);
-	bool mainWasVisible = false;
-	if (fMainWindow && fMainWindow->Lock()) {
-		mainWasVisible = !fMainWindow->IsHidden();
-		if (mainWasVisible) {
-			fMainWindow->Hide();
-			fMainWindow->Sync();
+	if (fMainWindow) {
+		BMessage hide(kMsgWindowHideForOverlay);
+		hide.AddBool("preview", preview);
+		hide.AddInt32("request", ++fOverlayRequestId);
+		if (fMainWindow->PostMessage(&hide) == B_OK) {
+			fOverlayRequestPending = true;
+			return;
 		}
-		fMainWindow->Unlock();
 	}
-	if (mainWasVisible)
-		snooze(50000);
+	_CreateOverlay(preview, false);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void
+FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible)
+{
+	fOverlayRequestPending = false;
 	fRestoreMainAfterOverlay = preview && mainWasVisible;
 	fPreviewing = preview;
 	BScreen screen;
@@ -223,22 +222,38 @@ FatCatApp::_ShowOverlay(bool preview)
 		if (!fPreferences.selectedMonitor.IsEmpty()
 			&& fPreferences.selectedMonitor != screenName)
 			continue;
-		BreakWindow* window = new BreakWindow(screen.Frame(), &fPreferences,
+		BreakWindow* window = new BreakWindow(screen.Frame(), fPreferences,
 			fSession.completedBreaks, preview, fPreferences.blockingBreak && !preview);
 		fBreakWindows.push_back(window);
 		window->Show();
 		window->Activate();
-		window->SetCountdown(fSession.Countdown(time(nullptr)));
+		BMessage countdown(kMsgBreakCountdown);
+		countdown.AddString("countdown", fSession.Countdown(time(nullptr)));
+		window->PostMessage(&countdown);
 	} while (screen.SetToNext() == B_OK);
 	// Disconnected selection falls back to the first connected screen.
 	if (fBreakWindows.empty()) {
 		BScreen first;
-		BreakWindow* window = new BreakWindow(first.Frame(), &fPreferences,
+		BreakWindow* window = new BreakWindow(first.Frame(), fPreferences,
 			fSession.completedBreaks, preview, fPreferences.blockingBreak && !preview);
 		fBreakWindows.push_back(window);
 		window->Show();
 		window->Activate();
-		window->SetCountdown(fSession.Countdown(time(nullptr)));
+		BMessage countdown(kMsgBreakCountdown);
+		countdown.AddString("countdown", fSession.Countdown(time(nullptr)));
+		window->PostMessage(&countdown);
+	}
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void
+FatCatApp::_UpdateBreakCountdown(const BString& countdown)
+{
+	for (BreakWindow* window : fBreakWindows) {
+		BMessage update(kMsgBreakCountdown);
+		update.AddString("countdown", countdown);
+		window->PostMessage(&update);
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
@@ -270,6 +285,17 @@ FatCatApp::MessageReceived(BMessage* message)
 {
 	time_t now = time(nullptr);
 	switch (message->what) {
+		case kMsgWindowHidden: {
+			bool preview = false;
+			bool wasVisible = false;
+			int32 request = 0;
+			message->FindBool("preview", &preview);
+			message->FindBool("was_visible", &wasVisible);
+			message->FindInt32("request", &request);
+			if (fOverlayRequestPending && request == fOverlayRequestId)
+				_CreateOverlay(preview, wasVisible);
+			break;
+		}
 		case B_ABOUT_REQUESTED:
 			AboutRequested();
 			break;
@@ -333,8 +359,7 @@ FatCatApp::MessageReceived(BMessage* message)
 				}
 				_StateChanged();
 			} else {
-				for (BreakWindow* window : fBreakWindows)
-					window->SetCountdown(fSession.Countdown(now));
+				_UpdateBreakCountdown(fSession.Countdown(now));
 			}
 			break;
 		}

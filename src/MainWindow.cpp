@@ -6,6 +6,7 @@
 #include <Button.h>
 #include <CheckBox.h>
 #include <GroupView.h>
+#include <InterfaceDefs.h>
 #include <LayoutBuilder.h>
 #include <Menu.h>
 #include <MenuField.h>
@@ -239,6 +240,34 @@ void
 MainWindow::MessageReceived(BMessage* message)
 {
 	if (message->what == kWindowTick) { _UpdateStatus(); return; }
+	if (message->what == kMsgWindowUpdate) {
+		_ApplyUpdate(*message);
+		return;
+	}
+	if (message->what == kMsgWindowShow) {
+		int32 workspace = current_workspace();
+		if (workspace >= 0 && workspace < 32)
+			SetWorkspaces(uint32(1) << workspace);
+		if (IsHidden())
+			Show();
+		Activate();
+		return;
+	}
+	if (message->what == kMsgWindowHideForOverlay) {
+		bool preview = false;
+		int32 request = 0;
+		message->FindBool("preview", &preview);
+		message->FindInt32("request", &request);
+		bool wasVisible = !IsHidden();
+		if (wasVisible)
+			Hide();
+		BMessage hidden(kMsgWindowHidden);
+		hidden.AddBool("preview", preview);
+		hidden.AddBool("was_visible", wasVisible);
+		hidden.AddInt32("request", request);
+		be_app->PostMessage(&hidden);
+		return;
+	}
 	if (message->what == kMsgStart || message->what == kMsgPauseResume
 		|| message->what == kMsgStop || message->what == kMsgPreview
 		|| message->what == kMsgToggleFavorite
@@ -268,15 +297,39 @@ MainWindow::MessageReceived(BMessage* message)
 	}
 	BWindow::MessageReceived(message);
 }
+
 void
-MainWindow::Update(const Session& session, const Preferences& preferences,
+MainWindow::PostUpdate(const Session& session, const Preferences& preferences,
 	const BString& persistenceError)
 {
-	fSession = session;
-	fPreferences = preferences;
-	fError = persistenceError;
+	BMessage update(kMsgWindowUpdate);
+	BMessage archivedSession;
+	BMessage archivedPreferences;
+	session.Archive(archivedSession);
+	preferences.Archive(archivedPreferences);
+	update.AddMessage("session", &archivedSession);
+	update.AddMessage("preferences", &archivedPreferences);
+	update.AddString("error", persistenceError);
+	PostMessage(&update);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void
+MainWindow::_ApplyUpdate(const BMessage& message)
+{
+	BMessage archivedSession;
+	BMessage archivedPreferences;
+	if (message.FindMessage("session", &archivedSession) == B_OK)
+		fSession.Restore(archivedSession, time(nullptr));
+	if (message.FindMessage("preferences", &archivedPreferences) == B_OK)
+		fPreferences.Restore(archivedPreferences);
+	const char* error = "";
+	message.FindString("error", &error);
+	fError = error;
 	_UpdateControls();
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
 void
 MainWindow::_UpdateControls()

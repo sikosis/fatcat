@@ -13,11 +13,10 @@ class CatView;
 
 class BreakWindow : public BWindow {
 public:
-	BreakWindow(BRect frame, Preferences* preferences, int32 completedBreaks,
+	BreakWindow(BRect frame, const Preferences& preferences, int32 completedBreaks,
 		bool preview, bool blocking);
 	bool QuitRequested() override;
 	void MessageReceived(BMessage* message) override;
-	void SetCountdown(const BString& value);
 
 private:
 	void _SendAction(uint32 what);

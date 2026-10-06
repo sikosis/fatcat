@@ -11,7 +11,7 @@
 
 class CatView : public BView {
 public:
-	CatView(Preferences* preferences, int32 completedBreaks, bool preview,
+	CatView(const Preferences& preferences, int32 completedBreaks, bool preview,
 		bool reducedMotion, BBitmap* backdrop);
 	~CatView() override;
 	void AttachedToWindow() override;
@@ -40,7 +40,7 @@ private:
 	BRect _CatFrame(const Cat& cat) const;
 	float _CatSize() const;
 
-	Preferences* fPreferences;
+	Preferences fPreferences;
 	int32 fCompletedBreaks;
 	bool fPreview;
 	bool fReducedMotion;

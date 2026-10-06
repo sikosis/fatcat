@@ -20,7 +20,7 @@ public:
 	MainWindow(const Session& session, const Preferences& preferences);
 	bool QuitRequested() override;
 	void MessageReceived(BMessage* message) override;
-	void Update(const Session& session, const Preferences& preferences,
+	void PostUpdate(const Session& session, const Preferences& preferences,
 		const BString& persistenceError);
 
 private:
@@ -28,6 +28,7 @@ private:
 	BView* _BuildCatsTab(const Session& session, const Preferences& preferences);
 	bool _PostApplicationMessage(const BMessage& message);
 	void _SendSettings();
+	void _ApplyUpdate(const BMessage& message);
 	void _UpdateControls();
 	void _UpdateStatus();
 

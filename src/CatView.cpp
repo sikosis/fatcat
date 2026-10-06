@@ -21,7 +21,7 @@ RandomUnit()
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-CatView::CatView(Preferences* preferences, int32 completedBreaks, bool preview,
+CatView::CatView(const Preferences& preferences, int32 completedBreaks, bool preview,
 	bool reducedMotion, BBitmap* backdrop)
 	:
 	BView("cat playground", B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE),
@@ -72,10 +72,10 @@ CatView::_Reset()
 		if (fPreview || fCompletedBreaks >= kUnlocks[id])
 			available.push_back(id);
 	}
-	if (!fPreview && !fPreferences->favorites.empty()) {
+	if (!fPreview && !fPreferences.favorites.empty()) {
 		std::vector<int32> favorites;
 		for (int32 id : available) {
-			if (fPreferences->IsFavorite(id))
+			if (fPreferences.IsFavorite(id))
 				favorites.push_back(id);
 		}
 		if (!favorites.empty())

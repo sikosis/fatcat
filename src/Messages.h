@@ -27,5 +27,11 @@ enum : uint32 {
 	kMsgTick = 'fctk',
 	kMsgQuit = 'fcqt',
 	kMsgPause = 'fcpa',
-	kMsgResume = 'fcre'
+	kMsgResume = 'fcre',
+	kMsgWindowUpdate = 'fcwu',
+	kMsgWindowShow = 'fcws',
+	kMsgWindowHideForOverlay = 'fcwh',
+	kMsgWindowHidden = 'fcwd',
+	kMsgBreakCountdown = 'fcbc',
+	kMsgBreakClose = 'fcbq'
 };
