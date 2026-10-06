@@ -1,18 +1,16 @@
 #include "FatCatApp.h"
 
 #include "BreakWindow.h"
+#include "DeskbarView.h"
 #include "MainWindow.h"
 #include "Messages.h"
 
 #include <Alert.h>
 #include <Bitmap.h>
 #include <Deskbar.h>
-#include <Entry.h>
-#include <FindDirectory.h>
 #include <IconUtils.h>
 #include <InterfaceDefs.h>
 #include <OS.h>
-#include <Path.h>
 #include <Resources.h>
 #include <Roster.h>
 #include <Screen.h>
@@ -20,16 +18,7 @@
 #include <algorithm>
 #include <ctime>
 #include <cstdio>
-
-static status_t
-AddDeskbarItem(BDeskbar& deskbar, const char* path)
-{
-	BEntry entry(path, true);
-	entry_ref ref;
-	status_t status = entry.GetRef(&ref);
-	return status == B_OK ? deskbar.AddItem(&ref) : status;
-}
-//---------------------------------------------------------------------------------------------------------------------------------//
+#include <cstring>
 
 FatCatApp::FatCatApp()
 	:
@@ -77,40 +66,25 @@ void
 FatCatApp::_EnsureDeskbarItem()
 {
 	BDeskbar deskbar;
+	if (!deskbar.IsRunning()) {
+		fPersistenceError = "Deskbar is not running.";
+		return;
+	}
 	if (deskbar.HasItem(kDeskbarItemName))
 		return;
-	entry_ref addOn;
-	if (be_roster->FindApp(kDeskbarSignature, &addOn) == B_OK
-		&& deskbar.AddItem(&addOn) == B_OK)
+
+	BView* view = CreateFatCatDeskbarView(BRect(0, 0, 112, 15));
+	status_t status = deskbar.AddItem(view);
+	delete view;
+	if (status == B_OK) {
+		if (fPersistenceError == "Deskbar is not running."
+			|| fPersistenceError.StartsWith("Deskbar item could not be installed:"))
+			fPersistenceError = "";
 		return;
-
-	app_info info;
-	BPath path;
-	if (GetAppInfo(&info) == B_OK) {
-		BEntry application(&info.ref);
-		BPath applicationPath;
-		if (application.GetPath(&applicationPath) == B_OK
-			&& applicationPath.GetParent(&path) == B_OK) {
-			path.Append("FatCatDeskbar.so");
-			if (AddDeskbarItem(deskbar, path.Path()) == B_OK)
-				return;
-		}
 	}
 
-	const directory_which locations[] = {
-		B_USER_NONPACKAGED_ADDONS_DIRECTORY,
-		B_USER_ADDONS_DIRECTORY,
-		B_SYSTEM_NONPACKAGED_ADDONS_DIRECTORY,
-		B_SYSTEM_ADDONS_DIRECTORY
-	};
-	for (directory_which location : locations) {
-		if (find_directory(location, &path) != B_OK)
-			continue;
-		path.Append("deskbar/FatCatDeskbar.so");
-		if (AddDeskbarItem(deskbar, path.Path()) == B_OK)
-			return;
-	}
-	fPersistenceError = "Deskbar item could not be installed.";
+	fPersistenceError = "Deskbar item could not be installed: ";
+	fPersistenceError << strerror(status);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 

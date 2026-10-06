@@ -1,3 +1,4 @@
+#include "DeskbarView.h"
 #include "Messages.h"
 
 #include <Archivable.h>
@@ -37,18 +38,16 @@ public:
 
 	~FatCatDeskbarView() override { delete fIcon; }
 
-	static BArchivable* Instantiate(BMessage* archive)
-	{
-		return validate_instantiation(archive, "FatCatDeskbarView")
-			? new FatCatDeskbarView(archive) : nullptr;
-	}
+	static BArchivable* Instantiate(BMessage* archive);
 
 	status_t Archive(BMessage* archive, bool deep = true) const override
 	{
 		status_t status = BView::Archive(archive, deep);
 		if (status == B_OK) {
 			archive->AddString("class", "FatCatDeskbarView");
-			archive->AddString("add_on", kDeskbarSignature);
+			// Match ClipDesk's proven pattern: the running application owns the
+			// replicant class and is also its archive add-on.
+			archive->AddString("add_on", kAppSignature);
 		}
 		return status;
 	}
@@ -169,9 +168,27 @@ public:
 	int32 fRemaining;
 };
 
+BArchivable*
+FatCatDeskbarView::Instantiate(BMessage* archive)
+{
+	return validate_instantiation(archive, "FatCatDeskbarView")
+		? new FatCatDeskbarView(archive) : nullptr;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+BView*
+CreateFatCatDeskbarView(BRect frame)
+{
+	return new FatCatDeskbarView(frame);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
 extern "C" _EXPORT BView*
 instantiate_deskbar_item(float maxWidth, float maxHeight)
 {
 	float width = std::min(112.0f, maxWidth);
-	return new FatCatDeskbarView(BRect(0, 0, width, maxHeight));
+	return CreateFatCatDeskbarView(BRect(0, 0, width, maxHeight));
 }
+//---------------------------------------------------------------------------------------------------------------------------------//

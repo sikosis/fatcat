@@ -113,7 +113,7 @@ fatcat-cli status
 ## Source layout
 
 - `src/FatCatApp.*` — application lifecycle, IPC, persistence, and phase transitions
-- `src/DeskbarView.cpp` — archived Deskbar replicant and live timer display
+- `src/DeskbarView.*` — archived Deskbar replicant and live timer display
 - `src/Session.*` — deterministic timer state machine
 - `src/MainWindow.*` — native settings and collection UI
 - `src/BreakWindow.*`, `src/CatView.*` — break/preview windows and animated sanctuary

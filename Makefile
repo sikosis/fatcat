@@ -3,7 +3,7 @@ CLI := fatcat-cli
 CXX ?= g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -O2 -Isrc
 APP_SOURCES := src/main.cpp src/FatCatApp.cpp src/MainWindow.cpp src/BreakWindow.cpp \
-	src/CatView.cpp src/Session.cpp src/Preferences.cpp
+	src/CatView.cpp src/Session.cpp src/Preferences.cpp src/DeskbarView.cpp
 APP_OBJECTS := $(APP_SOURCES:.cpp=.o)
 DESKBAR_OBJECT := src/DeskbarView.o
 LIBS := -lbe -ltranslation
