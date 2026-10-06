@@ -1,6 +1,7 @@
 #include "FatCatApp.h"
 
 #include "BreakWindow.h"
+#include "Debug.h"
 #include "DeskbarView.h"
 #include "MainWindow.h"
 #include "Messages.h"
@@ -24,13 +25,12 @@ static constexpr int32 kMaxScreens = 32;
 
 FatCatApp::FatCatApp()
 	:
-	BApplication(kAppSignature)
-{
+	BApplication(kAppSignature) {
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::ReadyToRun()
-{
+
+void FatCatApp::ReadyToRun() {
 	_Load();
 	_EnsureDeskbarItem();
 	fMainWindow = new MainWindow(fSession, fPreferences);
@@ -45,15 +45,18 @@ FatCatApp::ReadyToRun()
 	} else {
 		fMainWindow->Show();
 	}
+	FatCatDebug("ReadyToRun: mainHidden=%d", (int)fMainWindow->IsHidden());
+	FatCatDebug("ReadyToRun: cli=%d phase=%d", (int)fCommandLineOnly,
+		(int)fSession.phase);
 	BMessage tick(kMsgTick);
 	fTicker = std::make_unique<BMessageRunner>(BMessenger(this), &tick, 1000000);
 	if (fSession.phase == Phase::Break && !fSession.paused)
 		_ShowOverlay(false);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::ArgvReceived(int32 argc, char** argv)
-{
+
+void FatCatApp::ArgvReceived(int32 argc, char** argv) {
 	if (argc < 2) {
 		PostMessage(kMsgShow);
 		return;
@@ -71,10 +74,10 @@ FatCatApp::ArgvReceived(int32 argc, char** argv)
 		printf("Fat Cat is running. Use the Deskbar item for live status.\n");
 	}
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::_EnsureDeskbarItem()
-{
+
+void FatCatApp::_EnsureDeskbarItem() {
 	BDeskbar deskbar;
 	if (!deskbar.IsRunning()) {
 		fPersistenceError = "Deskbar is not running.";
@@ -99,9 +102,7 @@ FatCatApp::_EnsureDeskbarItem()
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-FatCatApp::_RemoveDeskbarItem()
-{
+void FatCatApp::_RemoveDeskbarItem() {
 	BDeskbar deskbar;
 	if (deskbar.IsRunning())
 		deskbar.RemoveItem(kDeskbarItemName);
@@ -109,15 +110,13 @@ FatCatApp::_RemoveDeskbarItem()
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-FatCatApp::AboutRequested()
-{
-	BString aboutText("Fat Cat Pomodoro v");
-	aboutText << kAppVersion << " for Haiku\n\n";
+void FatCatApp::AboutRequested() {
+	BString aboutText("Fat Cat Pomodoro\n\nVersion: ");
+	aboutText << kAppVersion << "\n";
 	aboutText << kAppDescription
-		<< "\n\nDesigned by Sikosis.\n"
-			"Original Fat Cat concept and sprites © 2026 arkane\n"
-			"Released under the MIT License.";
+		<< "\n\nDesigned by Sikosis\n\n"
+			"Original Fat Cat concept and Sprites ©2026 arkane\n\n"
+			"Released under the MIT License";
 	BAlert* about = new BAlert("About Fat Cat",
 		aboutText.String(),
 		"Purrfect", nullptr, nullptr, B_WIDTH_AS_USUAL, B_INFO_ALERT);
@@ -139,10 +138,10 @@ FatCatApp::AboutRequested()
 	// Keep the timer service responsive while the About window is open.
 	about->Go(static_cast<BInvoker*>(nullptr));
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::_Load()
-{
+
+void FatCatApp::_Load() {
 	BMessage state;
 	if (LoadFlatMessage("session", state) == B_OK)
 		fSession.Restore(state, time(nullptr));
@@ -160,38 +159,36 @@ FatCatApp::_SaveSession()
 	status_t status = SaveFlatMessage("session", message);
 	fPersistenceError = status == B_OK ? "" : "Session could not be saved.";
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::_SavePreferences()
-{
+void FatCatApp::_SavePreferences() {
 	BMessage message;
 	fPreferences.Archive(message);
 	status_t status = SaveFlatMessage("preferences", message);
 	if (status != B_OK)
 		fPersistenceError = "Preferences could not be saved.";
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::_StateChanged()
-{
+
+void FatCatApp::_StateChanged() {
 	_SaveSession();
 	if (fMainWindow)
 		fMainWindow->PostUpdate(fSession, fPreferences, fPersistenceError);
 	_UpdateBreakCountdown(fSession.Countdown(time(nullptr)));
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::_ShowMain()
-{
+
+void FatCatApp::_ShowMain() {
 	if (!fMainWindow)
 		return;
 	fMainWindow->PostUpdate(fSession, fPreferences, fPersistenceError);
 	fMainWindow->PostMessage(kMsgWindowShow);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::_CloseOverlays(bool restoreMain)
-{
+void FatCatApp::_CloseOverlays(bool restoreMain) {
 	bool showMain = restoreMain && fRestoreMainAfterOverlay;
 	if (fOverlayRequestPending) {
 		fOverlayRequestPending = false;
@@ -206,11 +203,12 @@ FatCatApp::_CloseOverlays(bool restoreMain)
 		_ShowMain();
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
-
-
 void
 FatCatApp::_ShowOverlay(bool preview)
 {
+	FatCatDebug("_ShowOverlay: preview=%d pending=%d main=%p hidden=%d",
+		(int)preview, (int)fOverlayRequestPending, (void*)fMainWindow,
+		fMainWindow != nullptr ? (int)fMainWindow->IsHidden() : -1);
 	if (fOverlayRequestPending)
 		return;
 	_CloseOverlays(false);
@@ -231,9 +229,7 @@ FatCatApp::_ShowOverlay(bool preview)
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible)
-{
+void FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible) {
 	fOverlayRequestPending = false;
 	fRestoreMainAfterOverlay = preview && mainWasVisible;
 	fPreviewing = preview;
@@ -259,9 +255,12 @@ FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible)
 		countdown.AddString("countdown", fSession.Countdown(time(nullptr)));
 		window->PostMessage(&countdown);
 	} while (index <= kMaxScreens && screen.SetToNext() == B_OK);
+	FatCatDebug("_CreateOverlay: after loop count=%d index=%d valid=%d",
+		(int)fBreakWindows.size(), (int)index, (int)screen.IsValid());
 	// Disconnected selection falls back to the first connected screen.
 	if (fBreakWindows.empty()) {
 		BScreen first;
+		FatCatDebug("_CreateOverlay: fallback valid=%d", (int)first.IsValid());
 		if (!first.IsValid() || !first.Frame().IsValid())
 			return;
 		BreakWindow* window = new BreakWindow(first.Frame(), fPreferences,
@@ -277,9 +276,7 @@ FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible)
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-FatCatApp::_UpdateBreakCountdown(const BString& countdown)
-{
+void FatCatApp::_UpdateBreakCountdown(const BString& countdown) {
 	for (BreakWindow* window : fBreakWindows) {
 		BMessage update(kMsgBreakCountdown);
 		update.AddString("countdown", countdown);
@@ -289,15 +286,14 @@ FatCatApp::_UpdateBreakCountdown(const BString& countdown)
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-bool FatCatApp::_Unlocked(int32 id) const
-{
+bool FatCatApp::_Unlocked(int32 id) const {
 	static const int32 thresholds[] = { 0, 1, 3, 6 };
 	return id >= 0 && id < 4 && fSession.completedBreaks >= thresholds[id];
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::_ReplyStatus(BMessage* request)
-{
+
+void FatCatApp::_ReplyStatus(BMessage* request) {
 	BMessage reply(kMsgStatusReply);
 	reply.AddString("version", kAppVersion);
 	reply.AddInt32("phase", (int32)fSession.phase);
@@ -309,10 +305,9 @@ FatCatApp::_ReplyStatus(BMessage* request)
 	reply.AddString("persistence_error", fPersistenceError);
 	request->SendReply(&reply);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-FatCatApp::MessageReceived(BMessage* message)
-{
+void FatCatApp::MessageReceived(BMessage* message) {
 	time_t now = time(nullptr);
 	switch (message->what) {
 		case kMsgWindowHidden: {
@@ -322,6 +317,9 @@ FatCatApp::MessageReceived(BMessage* message)
 			message->FindBool("preview", &preview);
 			message->FindBool("was_visible", &wasVisible);
 			message->FindInt32("request", &request);
+			FatCatDebug("kMsgWindowHidden: request=%d want=%d pending=%d",
+				(int)request, (int)fOverlayRequestId,
+				(int)fOverlayRequestPending);
 			if (fOverlayRequestPending && request == fOverlayRequestId)
 				_CreateOverlay(preview, wasVisible);
 			break;
@@ -330,6 +328,7 @@ FatCatApp::MessageReceived(BMessage* message)
 			AboutRequested();
 			break;
 		case kMsgShow:
+			FatCatDebug("app got kMsgShow");
 			_ShowMain();
 			break;
 		case kMsgStart:
@@ -367,6 +366,7 @@ FatCatApp::MessageReceived(BMessage* message)
 			_StateChanged();
 			break;
 		case kMsgPreview:
+			FatCatDebug("app got kMsgPreview");
 			_ShowOverlay(true);
 			break;
 		case kMsgDismiss:
@@ -450,10 +450,10 @@ FatCatApp::MessageReceived(BMessage* message)
 			BApplication::MessageReceived(message);
 	}
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-bool
-FatCatApp::QuitRequested()
-{
+
+bool FatCatApp::QuitRequested() {
 	_SaveSession();
 	_SavePreferences();
 	_RemoveDeskbarItem();

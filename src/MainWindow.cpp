@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 
+#include "Debug.h"
 #include "Messages.h"
 
 #include <Application.h>
@@ -251,6 +252,7 @@ MainWindow::MessageReceived(BMessage* message)
 		return;
 	}
 	if (message->what == kMsgWindowShow) {
+		FatCatDebug("window got kMsgWindowShow hidden=%d", (int)IsHidden());
 		int32 workspace = current_workspace();
 		if (workspace >= 0 && workspace < 32)
 			SetWorkspaces(uint32(1) << workspace);
@@ -265,13 +267,16 @@ MainWindow::MessageReceived(BMessage* message)
 		message->FindBool("preview", &preview);
 		message->FindInt32("request", &request);
 		bool wasVisible = !IsHidden();
+		FatCatDebug("window got kMsgWindowHideForOverlay request=%d visible=%d",
+			(int)request, (int)wasVisible);
 		if (wasVisible)
 			Hide();
 		BMessage hidden(kMsgWindowHidden);
 		hidden.AddBool("preview", preview);
 		hidden.AddBool("was_visible", wasVisible);
 		hidden.AddInt32("request", request);
-		be_app->PostMessage(&hidden);
+		FatCatDebug("window posting kMsgWindowHidden status=%d",
+			(int)be_app->PostMessage(&hidden));
 		return;
 	}
 	if (message->what == kMsgStart || message->what == kMsgPauseResume
