@@ -35,8 +35,16 @@ FatCatApp::ReadyToRun()
 	_EnsureDeskbarItem();
 	fMainWindow = new MainWindow(fSession, fPreferences);
 	fMainWindow->CenterOnScreen();
-	if (!fCommandLineOnly)
+	// BWindow only starts its looper on the first Show(), so always call it.
+	// For a command-line-only launch Hide() first: it bumps fShowLevel above
+	// zero, so the follow-up Show() runs the looper without exposing the
+	// settings window for a frame.
+	if (fCommandLineOnly) {
+		fMainWindow->Hide();
 		fMainWindow->Show();
+	} else {
+		fMainWindow->Show();
+	}
 	BMessage tick(kMsgTick);
 	fTicker = std::make_unique<BMessageRunner>(BMessenger(this), &tick, 1000000);
 	if (fSession.phase == Phase::Break && !fSession.paused)
@@ -87,6 +95,16 @@ FatCatApp::_EnsureDeskbarItem()
 
 	fPersistenceError = "Deskbar item could not be installed: ";
 	fPersistenceError << strerror(status);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void
+FatCatApp::_RemoveDeskbarItem()
+{
+	BDeskbar deskbar;
+	if (deskbar.IsRunning())
+		deskbar.RemoveItem(kDeskbarItemName);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -196,7 +214,10 @@ FatCatApp::_ShowOverlay(bool preview)
 	if (fOverlayRequestPending)
 		return;
 	_CloseOverlays(false);
-	if (fMainWindow) {
+	// Only a visible settings window needs the hide/confirm round trip. When it
+	// is already out of the way there is nothing to snapshot around, and no
+	// reply to wait for.
+	if (fMainWindow && !fMainWindow->IsHidden()) {
 		BMessage hide(kMsgWindowHideForOverlay);
 		hide.AddBool("preview", preview);
 		hide.AddInt32("request", ++fOverlayRequestId);
@@ -435,5 +456,6 @@ FatCatApp::QuitRequested()
 {
 	_SaveSession();
 	_SavePreferences();
+	_RemoveDeskbarItem();
 	return true;
 }

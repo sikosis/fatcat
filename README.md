@@ -12,9 +12,9 @@ A native Haiku recreation of [Fat Cat Pomodoro](https://github.com/jeremielumand
 
 - Focus, short-break, and long-break phases. Defaults are 25 minutes focus, 5 minutes short break, 15 minutes long break, and one long break after every 4 completed focus sessions.
 - A live Deskbar readout with the Fat Cat HVIF icon. A green dot means the
-  background service is responding; a grey **Off** state means it is stopped.
-  Primary-click launches or reveals Fat Cat, and secondary-click starts a safe
-  15-second preview.
+  background service is responding; a grey **Off** state means it stopped
+  without a clean quit. Primary-click launches or reveals Fat Cat, and
+  secondary-click starts a safe 15-second preview.
 - Fat Cat runs as a background application in Deskbar and keeps working after
   the settings window closes.
 - An original cat-and-Pomodoro HVIF icon is embedded in `fatcat.app` and displayed in its native About box.
@@ -75,7 +75,7 @@ target remains available for development builds outside package management.
 
 ## Use
 
-The **Timer** tab starts, pauses/resumes, and stops the timer; previews the sanctuary; and configures intervals, display, blocking, and motion. Interval edits affect the next phase, not the phase currently in progress. **Quit Fat Cat** exits the background application; the window's close button only hides it, so the Deskbar item stays available for the next launch.
+The **Timer** tab starts, pauses/resumes, and stops the timer; previews the sanctuary; and configures intervals, display, blocking, and motion. Interval edits affect the next phase, not the phase currently in progress. The window's close button only hides it, so Fat Cat keeps running in the background with its Deskbar item; **Quit Fat Cat** exits the application and removes the Deskbar item (the next launch reinstalls it).
 
 The **Cats** tab shows collection progress. Names save when Enter is pressed or the field loses focus. If any unlocked cats are favorited, only favorites visit during real breaks; previews always show all four cats.
 

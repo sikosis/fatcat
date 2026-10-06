@@ -23,6 +23,7 @@ public:
 
 private:
 	void _EnsureDeskbarItem();
+	void _RemoveDeskbarItem();
 	void _Load();
 	void _SaveSession();
 	void _SavePreferences();
