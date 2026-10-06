@@ -256,11 +256,11 @@ void FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible) {
 		fBreakWindows.push_back(window);
 		window->Show();
 		window->Activate();
-		FatCatDebug("  window shown frame=(%.0f,%.0f,%.0f,%.0f) actual=(%.0f,%.0f,%.0f,%.0f) hidden=%d ws=%d",
+		FatCatDebug("  window shown frame=(%.0f,%.0f,%.0f,%.0f) actual=(%.0f,%.0f,%.0f,%.0f) hidden=%d ws=0x%x",
 			frame.left, frame.top, frame.right, frame.bottom,
 			window->Frame().left, window->Frame().top,
 			window->Frame().right, window->Frame().bottom,
-			(int)window->IsHidden(), (int)window->CurrentWorkspace());
+			(int)window->IsHidden(), (unsigned)window->Workspaces());
 		BMessage countdown(kMsgBreakCountdown);
 		countdown.AddString("countdown", fSession.Countdown(time(nullptr)));
 		window->PostMessage(&countdown);
