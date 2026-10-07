@@ -30,7 +30,7 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 	bool preview, bool blocking)
 	:
 	BWindow(frame, "Fat Cat break", B_NO_BORDER_WINDOW_LOOK,
-		blocking ? B_MODAL_APP_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL,
+		blocking ? B_MODAL_APP_WINDOW_FEEL : B_FLOATING_ALL_WINDOW_FEEL,
 		B_WILL_ACCEPT_FIRST_CLICK | B_NOT_CLOSABLE | B_NOT_ZOOMABLE
 			| B_NOT_MINIMIZABLE | B_NOT_MOVABLE | B_NOT_RESIZABLE,
 		CurrentWorkspaceMask()),
