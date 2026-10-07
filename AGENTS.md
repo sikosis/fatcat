@@ -62,7 +62,7 @@ bool MyWindow::MyFunction() {
 
 - When the version is displayed in text generally it will be prefixed with a small v  ie. v<MAJOR>.<MINOR><PATCH>
 - Every time we make a change to the app, that's a patch and so we increment by 0.01
-- There will never be a trailing zero on a version number ie. never 0.10
+- There will never be a trailing zero on a version number ie. never 0.10 but instead 0.1 (so no zero)
 - <PATCH> number will be right after the <MINOR> number with no dot in between
 - Use the same version in tags, application metadata, CLI output, package
   recipes, and documentation.

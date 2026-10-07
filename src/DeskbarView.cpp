@@ -20,36 +20,31 @@ static const int32 kResourceAnchor = 0;
 static constexpr uint32 kDeskbarPoll = 'fcdp';
 
 class FatCatDeskbarView : public BView {
+
 public:
-	FatCatDeskbarView(BRect frame)
-		:
-		BView(frame, kDeskbarItemName, B_FOLLOW_NONE, B_WILL_DRAW),
+	FatCatDeskbarView(BRect frame) : BView(frame, kDeskbarItemName, B_FOLLOW_NONE, B_WILL_DRAW),
 		fIcon(nullptr), fRunner(nullptr), fRunning(false), fWaitingForReply(false),
-		fWaitTicks(0), fPhase(0), fPaused(false), fRemaining(0)
-	{
-		SetViewColor(B_TRANSPARENT_COLOR);
-		_LoadIcon();
+		fWaitTicks(0), fPhase(0), fPaused(false), fRemaining(0)	{
+			SetViewColor(B_TRANSPARENT_COLOR);
+			_LoadIcon();
 	}
 
 	FatCatDeskbarView(BMessage* archive)
 		:
 		BView(archive), fIcon(nullptr), fRunner(nullptr), fRunning(false),
 		fWaitingForReply(false), fWaitTicks(0), fPhase(0), fPaused(false),
-		fRemaining(0)
-	{
+		fRemaining(0) {
 		_LoadIcon();
 	}
 
-	~FatCatDeskbarView() override
-	{
+	~FatCatDeskbarView() override {
 		delete fRunner;
 		delete fIcon;
 	}
 
 	static BArchivable* Instantiate(BMessage* archive);
 
-	status_t Archive(BMessage* archive, bool deep = true) const override
-	{
+	status_t Archive(BMessage* archive, bool deep = true) const override {
 		status_t status = BView::Archive(archive, deep);
 		if (status == B_OK) {
 			archive->AddString("class", "FatCatDeskbarView");
@@ -60,8 +55,7 @@ public:
 		return status;
 	}
 
-	void AttachedToWindow() override
-	{
+	void AttachedToWindow() override {
 		BView::AttachedToWindow();
 		BMessenger app(kAppSignature);
 		if (!app.IsValid()) {
@@ -73,8 +67,7 @@ public:
 		fRunner = new BMessageRunner(BMessenger(this), &poll, 1000000);
 	}
 
-	void DetachedFromWindow() override
-	{
+	void DetachedFromWindow() override {
 		delete fRunner;
 		fRunner = nullptr;
 		BView::DetachedFromWindow();
@@ -133,17 +126,15 @@ public:
 			(Bounds().Height() + height.ascent - height.descent) / 2));
 	}
 
-	void MouseDown(BPoint) override
-	{
-uint32 buttons = B_PRIMARY_MOUSE_BUTTON;
-	if (Window() && Window()->CurrentMessage())
-		Window()->CurrentMessage()->FindInt32("buttons", (int32*)&buttons);
-	_Send(buttons & B_SECONDARY_MOUSE_BUTTON ? kMsgPreview : kMsgShow);
+	void MouseDown(BPoint) override	{
+		uint32 buttons = B_PRIMARY_MOUSE_BUTTON;
+		if (Window() && Window()->CurrentMessage())
+			Window()->CurrentMessage()->FindInt32("buttons", (int32*)&buttons);
+			_Send(buttons & B_SECONDARY_MOUSE_BUTTON ? kMsgPreview : kMsgShow);
 	}
 
 	private:
-	void _LoadIcon()
-	{
+	void _LoadIcon() {
 		BResources resources;
 		if (resources.SetToImage(&kResourceAnchor) != B_OK)
 			return;
@@ -161,8 +152,7 @@ uint32 buttons = B_PRIMARY_MOUSE_BUTTON;
 			delete icon;
 	}
 
-	void _Send(uint32 what)
-	{
+	void _Send(uint32 what)	{
 		BMessage message(what);
 		BMessenger app(kAppSignature);
 		if (app.IsValid()) {
@@ -174,8 +164,7 @@ uint32 buttons = B_PRIMARY_MOUSE_BUTTON;
 		}
 	}
 
-	void _Query()
-	{
+	void _Query() {
 		if (fWaitingForReply) {
 			if (++fWaitTicks >= 3) {
 				fWaitingForReply = false;
@@ -198,8 +187,7 @@ uint32 buttons = B_PRIMARY_MOUSE_BUTTON;
 			_SetUnavailable();
 	}
 
-	void _SetUnavailable()
-	{
+	void _SetUnavailable()	{
 		if (!fRunning)
 			return;
 		fRunning = false;
@@ -219,26 +207,20 @@ uint32 buttons = B_PRIMARY_MOUSE_BUTTON;
 	int32 fRemaining;
 };
 
-BArchivable*
-FatCatDeskbarView::Instantiate(BMessage* archive)
-{
+BArchivable* FatCatDeskbarView::Instantiate(BMessage* archive) {
 	return validate_instantiation(archive, "FatCatDeskbarView")
 		? new FatCatDeskbarView(archive) : nullptr;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-BView*
-CreateFatCatDeskbarView(BRect frame)
-{
+BView* CreateFatCatDeskbarView(BRect frame) {
 	return new FatCatDeskbarView(frame);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-extern "C" _EXPORT BView*
-instantiate_deskbar_item(float maxWidth, float maxHeight)
-{
+extern "C" _EXPORT BView* instantiate_deskbar_item(float maxWidth, float maxHeight) {
 	float width = std::min(112.0f, maxWidth);
 	return CreateFatCatDeskbarView(BRect(0, 0, width, maxHeight));
 }

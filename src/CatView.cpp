@@ -27,8 +27,7 @@ CatView::CatView(const Preferences& preferences, int32 completedBreaks, bool pre
 	fCompletedBreaks(completedBreaks),
 	fPreview(preview),
 	fReducedMotion(reducedMotion),
-	fBackdrop(backdrop)
-{
+	fBackdrop(backdrop) {
 	SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	for (int32 i = 0; i < 4; ++i)
 		fSheets[i].reset(BTranslationUtils::GetBitmap(ResourcePath(kFiles[i]).String()));
