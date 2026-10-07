@@ -4,4 +4,5 @@
 fatcat-cli
 FatCatDeskbar.so
 tests/session_test
+/dist/
 .DS_Store

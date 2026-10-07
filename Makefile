@@ -8,7 +8,7 @@ APP_OBJECTS := $(APP_SOURCES:.cpp=.o)
 DESKBAR_OBJECT := src/DeskbarView.o
 LIBS := -lbe -ltranslation
 
-.PHONY: all clean install uninstall check test
+.PHONY: all clean install uninstall check test haiku-package
 
 all: $(NAME) $(CLI) FatCatDeskbar.so
 
@@ -55,6 +55,9 @@ install: all
 
 uninstall:
 	sh scripts/uninstall.sh
+
+haiku-package:
+	sh scripts/build-haiku-package.sh
 
 clean:
 	rm -f $(APP_OBJECTS) $(DESKBAR_OBJECT) $(NAME) $(CLI) FatCatDeskbar.so *.rsrc tests/session_test
