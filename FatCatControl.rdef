@@ -1,4 +1,4 @@
-resource app_signature "application/x-vnd.arkane-FatCatControl";
+resource app_signature "application/x-vnd.sikosis-fatcatControl";
 resource app_flags B_MULTIPLE_LAUNCH;
 
 resource app_version {
