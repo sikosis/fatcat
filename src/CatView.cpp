@@ -4,6 +4,7 @@
 
 #include <Message.h>
 #include <TranslationUtils.h>
+#include <Window.h>
 
 #include <algorithm>
 #include <cmath>
