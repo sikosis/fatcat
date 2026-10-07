@@ -38,7 +38,8 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 	fActionSent(false),
 	fPreviewSeconds(15),
 	fPreviewDeadline(system_time() + 15000000),
-	fCountdown(nullptr)
+	fCountdown(nullptr),
+	fMsgLogCount(0)
 {
 	FatCatDebug("BreakWindow ctor this=%p preview=%d blocking=%d frame=(%.0f,%.0f,%.0f,%.0f) ws=0x%x",
 		(void*)this, (int)preview, (int)blocking,
@@ -129,6 +130,9 @@ bool BreakWindow::QuitRequested() {
 
 
 void BreakWindow::MessageReceived(BMessage* message) {
+	if (++fMsgLogCount <= 5 || fMsgLogCount % 200 == 0)
+		FatCatDebug("BreakWindow msg this=%p n=%d what=0x%x preview=%d",
+			(void*)this, fMsgLogCount, (unsigned)message->what, (int)fPreview);
 	if (message->what == B_WINDOW_ACTIVATED)
 		FatCatDebug("BreakWindow: WINDOW_ACTIVATED");
 	if (message->what == B_WORKSPACE_ACTIVATED)

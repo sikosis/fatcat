@@ -27,4 +27,5 @@ private:
 	bigtime_t fPreviewDeadline;
 	BStringView* fCountdown;
 	std::unique_ptr<BMessageRunner> fRunner;
+	int fMsgLogCount;
 };

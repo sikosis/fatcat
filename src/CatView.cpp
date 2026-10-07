@@ -214,6 +214,11 @@ void CatView::_Advance(float seconds) {
 void CatView::MessageReceived(BMessage* message) {
 	if (message->what == kAnimate) {
 		bigtime_t now = system_time();
+		if (++fAnimLogCount <= 5 || fAnimLogCount % 90 == 0)
+			FatCatDebug("CatView kAnimate this=%p n=%d hidden=%d active=%d",
+				(void*)this, fAnimLogCount,
+				Window() != nullptr ? (int)Window()->IsHidden() : -1,
+				Window() != nullptr ? (int)Window()->IsActive() : -1);
 		_Advance((now - fLastTick) / 1000000.0f);
 		fLastTick = now;
 		return;

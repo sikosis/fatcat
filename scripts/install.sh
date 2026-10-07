@@ -20,7 +20,7 @@ if command -v desklink >/dev/null 2>&1; then
 	# the replicant. A fixed bound avoids depending on desklink's exit status.
 	remove_attempt=0
 	while [ "$remove_attempt" -lt 32 ]; do
-		desklink --remove=FatCatDeskbar >/dev/null 2>&1 || true
+		desklink --remove=fatcatDeskbar >/dev/null 2>&1 || true
 		remove_attempt=$((remove_attempt + 1))
 	done
 	sleep 1
