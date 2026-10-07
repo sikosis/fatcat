@@ -39,7 +39,8 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 	fPreviewDeadline(system_time() + 15000000),
 	fCountdown(nullptr)
 {
-	AddShortcut(B_ESCAPE, 0, new BMessage(preview ? kMsgDismiss : kMsgSkipBreak), this);
+	AddShortcut(B_ESCAPE, B_NO_COMMAND_KEY,
+		new BMessage(preview ? kMsgDismiss : kMsgSkipBreak), this);
 
 	BBitmap* backdrop = nullptr;
 	BScreen screen(this);

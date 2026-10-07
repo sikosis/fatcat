@@ -1,4 +1,4 @@
-# Fat Cat Pomodoro v0.078 for Haiku
+# Fat Cat Pomodoro v0.12 for Haiku
 
 <p align="center">
   <img src="artwork/fatcat-icon.svg" alt="Fat Cat icon" width="128" height="128">
@@ -14,7 +14,7 @@ A native Haiku recreation of [Fat Cat Pomodoro](https://github.com/jeremielumand
 - A live Deskbar readout with the Fat Cat HVIF icon. A green dot means the
   background service is responding; a grey **Off** state means it stopped
   without a clean quit. Primary-click launches or reveals Fat Cat, and
-  secondary-click starts a safe 15-second preview.
+  secondary-click opens a control menu.
 - Fat Cat runs as a background application in Deskbar and keeps working after
   the settings window closes.
 - An original cat-and-Pomodoro HVIF icon is embedded in `fatcat` and displayed in its native About box.
@@ -57,16 +57,16 @@ after manually restarting Deskbar to restore the item.
 
 HaikuPorts is the intended release format and produces a standard installable
 `.hpkg`. The recipe template is in
-[`packaging/haikuports/fatcat-0.078.recipe.in`](packaging/haikuports/fatcat-0.078.recipe.in).
+[`packaging/haikuports/fatcat-0.12.recipe.in`](packaging/haikuports/fatcat-0.12.recipe.in).
 
-After publishing the GitHub repository and creating the `v0.078` tag, replace
+After publishing the GitHub repository and creating the `v0.12` tag, replace
 the template's `@HOMEPAGE@`, `@SOURCE_URI@`, `@CHECKSUM_SHA256@`, and
 `@SOURCE_DIR@` values. Copy the completed recipe to
-`haiku-apps/fatcat/fatcat-0.078.recipe` in a HaikuPorts tree and build it on
+`haiku-apps/fatcat/fatcat-0.12.recipe` in a HaikuPorts tree and build it on
 Haiku with:
 
 ```sh
-haikuporter -S fatcat-0.078
+haikuporter -S fatcat-0.12
 ```
 
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar

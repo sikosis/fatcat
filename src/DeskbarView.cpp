@@ -5,8 +5,12 @@
 #include <Bitmap.h>
 #include <IconUtils.h>
 #include <InterfaceDefs.h>
+#include <Menu.h>
+#include <MenuItem.h>
 #include <Message.h>
 #include <MessageRunner.h>
+#include <Messenger.h>
+#include <PopUpMenu.h>
 #include <Resources.h>
 #include <Roster.h>
 #include <String.h>
@@ -126,11 +130,14 @@ public:
 			(Bounds().Height() + height.ascent - height.descent) / 2));
 	}
 
-	void MouseDown(BPoint) override	{
+	void MouseDown(BPoint where) override	{
 		uint32 buttons = B_PRIMARY_MOUSE_BUTTON;
 		if (Window() && Window()->CurrentMessage())
 			Window()->CurrentMessage()->FindInt32("buttons", (int32*)&buttons);
-			_Send(buttons & B_SECONDARY_MOUSE_BUTTON ? kMsgPreview : kMsgShow);
+		if ((buttons & B_SECONDARY_MOUSE_BUTTON) != 0)
+			_ShowMenu(where);
+		else
+			_Send(kMsgShow);
 	}
 
 	private:
@@ -150,6 +157,24 @@ public:
 			fIcon = icon;
 		} else
 			delete icon;
+	}
+
+	void _ShowMenu(BPoint where) {
+		BPopUpMenu* menu = new BPopUpMenu("fatcat", false, false);
+		menu->AddItem(new BMenuItem("Show Fat Cat", new BMessage(kMsgShow)));
+		menu->AddSeparatorItem();
+		if (!fRunning)
+			menu->AddItem(new BMenuItem("Start", new BMessage(kMsgStart)));
+		else if (fPaused)
+			menu->AddItem(new BMenuItem("Resume", new BMessage(kMsgResume)));
+		else
+			menu->AddItem(new BMenuItem("Pause", new BMessage(kMsgPause)));
+		menu->AddItem(new BMenuItem("Stop", new BMessage(kMsgStop)));
+		menu->AddSeparatorItem();
+		menu->AddItem(new BMenuItem("Quit Fat Cat", new BMessage(kMsgQuit)));
+		menu->SetTargetForItems(BMessenger(kAppSignature));
+		menu->SetAsyncAutoDestruct(true);
+		menu->Go(ConvertToScreen(where), true, false, true);
 	}
 
 	void _Send(uint32 what)	{
