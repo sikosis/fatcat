@@ -28,6 +28,10 @@ private:
 	BView* _BuildCatsTab(const Session& session, const Preferences& preferences);
 	bool _PostApplicationMessage(const BMessage& message);
 	void _SendSettings();
+	void _ApplyProfile(const char* name);
+	const char* _ProfileNameFor(int32 focus, int32 rest, int32 longRest,
+		int32 every) const;
+	void _UpdateProfileSelection();
 	void _ApplyUpdate(const BMessage& message);
 	void _UpdateControls();
 	void _UpdateStatus();
@@ -47,6 +51,7 @@ private:
 	BCheckBox* fBlocking;
 	BCheckBox* fMotion;
 	BMenuField* fMonitor;
+	BMenuField* fProfile;
 	BStringView* fCatNameLabels[4];
 	BTextControl* fCatNames[4];
 	BButton* fFavoriteButtons[4];

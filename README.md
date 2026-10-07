@@ -1,4 +1,4 @@
-# Fat Cat Pomodoro v0.12 for Haiku
+# Fat Cat Pomodoro v0.13 for Haiku
 
 <p align="center">
   <img src="artwork/fatcat-icon.svg" alt="Fat Cat icon" width="128" height="128">
@@ -11,6 +11,9 @@ A native Haiku recreation of [Fat Cat Pomodoro](https://github.com/jeremielumand
 ## Features
 
 - Focus, short-break, and long-break phases. Defaults are 25 minutes focus, 5 minutes short break, 15 minutes long break, and one long break after every 4 completed focus sessions.
+- Timer profiles provide Intense (50/10/25 minutes, long break every 3), Chill
+  (20/10/20 minutes, every 4), Defaults (25/5/15 minutes, every 4), and
+  Custom values.
 - A live Deskbar readout with the Fat Cat HVIF icon. A green dot means the
   background service is responding; a grey **Off** state means it stopped
   without a clean quit. Primary-click launches or reveals Fat Cat, and
@@ -57,16 +60,16 @@ after manually restarting Deskbar to restore the item.
 
 HaikuPorts is the intended release format and produces a standard installable
 `.hpkg`. The recipe template is in
-[`packaging/haikuports/fatcat-0.12.recipe.in`](packaging/haikuports/fatcat-0.12.recipe.in).
+[`packaging/haikuports/fatcat-0.13.recipe.in`](packaging/haikuports/fatcat-0.13.recipe.in).
 
-After publishing the GitHub repository and creating the `v0.12` tag, replace
+After publishing the GitHub repository and creating the `v0.13` tag, replace
 the template's `@HOMEPAGE@`, `@SOURCE_URI@`, `@CHECKSUM_SHA256@`, and
 `@SOURCE_DIR@` values. Copy the completed recipe to
-`haiku-apps/fatcat/fatcat-0.12.recipe` in a HaikuPorts tree and build it on
+`haiku-apps/fatcat/fatcat-0.13.recipe` in a HaikuPorts tree and build it on
 Haiku with:
 
 ```sh
-haikuporter -S fatcat-0.12
+haikuporter -S fatcat-0.13
 ```
 
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar
@@ -75,7 +78,7 @@ target remains available for development builds outside package management.
 
 ## Use
 
-The **Timer** tab starts, pauses/resumes, and stops the timer; previews the sanctuary; and configures intervals, display, blocking, and motion. Interval edits affect the next phase, not the phase currently in progress. The window's close button only hides it, so Fat Cat keeps running in the background with its Deskbar item; **Quit Fat Cat** exits the application and removes the Deskbar item (the next launch reinstalls it).
+The **Timer** tab starts, pauses/resumes, and stops the timer; previews the sanctuary; and configures intervals, display, blocking, and motion. Choosing Intense, Chill, or Defaults from the Profile menu immediately saves its timer values; Custom preserves manually entered values for **Save settings**. Interval edits affect the next phase, not the phase currently in progress. The window's close button only hides it, so Fat Cat keeps running in the background with its Deskbar item; **Quit Fat Cat** exits the application and removes the Deskbar item (the next launch reinstalls it).
 
 The **Cats** tab shows collection progress. Names save when Enter is pressed or the field loses focus. If any unlocked cats are favorited, only favorites visit during real breaks; previews always show all four cats.
 

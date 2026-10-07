@@ -12,6 +12,7 @@
 #include <MenuField.h>
 #include <MenuItem.h>
 #include <Messenger.h>
+#include <PopUpMenu.h>
 #include <Screen.h>
 #include <SeparatorView.h>
 #include <StringView.h>
@@ -24,6 +25,8 @@
 
 static constexpr uint32 kSave = 'save';
 static constexpr uint32 kSelectMonitor = 'smon';
+static constexpr uint32 kSelectProfile = 'sprf';
+static constexpr uint32 kFieldEdited = 'fled';
 static constexpr uint32 kRenameBase = 'rn00';
 static constexpr uint32 kWindowTick = 'mwtk';
 static constexpr int32 kMaxScreens = 32;
@@ -32,6 +35,29 @@ static const char* kPersonalities[] = {
 	"Sleepy · expert napper", "Curious · gentle explorer",
 	"Playful · little zoomies", "Shy · quiet company"
 };
+
+struct ProfilePreset {
+	const char* name;
+	int32 focus;
+	int32 rest;
+	int32 longRest;
+	int32 every;
+};
+
+// A non-positive focus marks a profile that keeps the current field values.
+static const ProfilePreset kProfiles[] = {
+	{ "Intense", 50, 10, 25, 3 },
+	{ "Chill", 20, 10, 20, 4 },
+	{ "Defaults", 25, 5, 15, 4 },
+	{ "Custom", 0, 0, 0, 0 }
+};
+
+static bool ParseSetting(const char* text, long minimum, long maximum, long& value) {
+	char* end = nullptr;
+	value = strtol(text, &end, 10);
+	return end != text && *end == '\0' && value >= minimum && value <= maximum;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
 
 MainWindow::MainWindow(const Session& session, const Preferences& preferences)
 	:
@@ -51,6 +77,7 @@ MainWindow::MainWindow(const Session& session, const Preferences& preferences)
 	fBlocking(nullptr),
 	fMotion(nullptr),
 	fMonitor(nullptr),
+	fProfile(nullptr),
 	fSettingsInitialized(false)
 {
 	for (int32 i = 0; i < 4; ++i) {
@@ -94,8 +121,11 @@ MainWindow::_BuildTimerTab()
 	fBreak = new BTextControl("Short break:", "", nullptr);
 	fLongBreak = new BTextControl("Long break:", "", nullptr);
 	fEvery = new BTextControl("Long break every:", "", nullptr);
-	for (BTextControl* field : { fFocus, fBreak, fLongBreak, fEvery })
+	for (BTextControl* field : { fFocus, fBreak, fLongBreak, fEvery }) {
 		field->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
+		field->SetModificationMessage(new BMessage(kFieldEdited));
+		field->SetTarget(this);
+	}
 	fBlocking = new BCheckBox("Keep break overlay in front", nullptr);
 	fMotion = new BCheckBox("Reduced motion", nullptr);
 
@@ -119,6 +149,16 @@ MainWindow::_BuildTimerTab()
 	fSaveMessage = new BStringView("save result", "");
 	BButton* save = new BButton("Save settings", new BMessage(kSave));
 	save->SetTarget(this);
+	BPopUpMenu* profiles = new BPopUpMenu("Profiles");
+	profiles->SetRadioMode(true);
+	profiles->SetLabelFromMarked(true);
+	for (const ProfilePreset& profile : kProfiles) {
+		BMessage* message = new BMessage(kSelectProfile);
+		message->AddString("profile", profile.name);
+		profiles->AddItem(new BMenuItem(profile.name, message));
+	}
+	profiles->SetTargetForItems(this);
+	fProfile = new BMenuField("Profile:", profiles);
 
 	BLayoutBuilder::Group<>(view, B_VERTICAL, 10)
 		.SetInsets(12)
@@ -147,6 +187,7 @@ MainWindow::_BuildTimerTab()
 		.Add(fMotion)
 		.Add(fMonitor)
 		.AddGroup(B_HORIZONTAL, 8).Add(save).Add(fSaveMessage).AddGlue().End()
+		.AddGroup(B_HORIZONTAL, 8).Add(fProfile).AddGlue().End()
 		.AddGlue();
 	return view;
 }
@@ -214,16 +255,11 @@ MainWindow::_PostApplicationMessage(const BMessage& message)
 void
 MainWindow::_SendSettings()
 {
-	auto parse = [](const char* text, long minimum, long maximum, long& value) {
-		char* end = nullptr;
-		value = strtol(text, &end, 10);
-		return end != text && *end == '\0' && value >= minimum && value <= maximum;
-	};
 	long focus, rest, longRest, every;
-	if (parse(fFocus->Text(), 1, 180, focus)
-		&& parse(fBreak->Text(), 1, 180, rest)
-		&& parse(fLongBreak->Text(), 1, 180, longRest)
-		&& parse(fEvery->Text(), 2, 12, every)) {
+	if (ParseSetting(fFocus->Text(), 1, 180, focus)
+		&& ParseSetting(fBreak->Text(), 1, 180, rest)
+		&& ParseSetting(fLongBreak->Text(), 1, 180, longRest)
+		&& ParseSetting(fEvery->Text(), 2, 12, every)) {
 		BMessage save(kMsgSaveSettings);
 		save.AddInt32("focus", focus);
 		save.AddInt32("break", rest);
@@ -233,9 +269,14 @@ MainWindow::_SendSettings()
 		save.AddBool("reduced_motion", fMotion->Value() == B_CONTROL_ON);
 		save.AddString("monitor", fPreferences.selectedMonitor);
 		status_t status = be_app->PostMessage(&save);
-		if (status == B_OK)
-			fSaveMessage->SetText("Saved · applies to the next interval.");
-		else {
+		if (status == B_OK) {
+			const char* profile = _ProfileNameFor(focus, rest, longRest, every);
+			if (BMenuItem* item = fProfile->Menu()->FindItem(profile))
+				item->SetMarked(true);
+			BString saved(profile);
+			saved << " profile saved · applies to the next interval.";
+			fSaveMessage->SetText(saved.String());
+		} else {
 			BString error("Save failed: ");
 			error << strerror(status);
 			fSaveMessage->SetText(error.String());
@@ -244,6 +285,59 @@ MainWindow::_SendSettings()
 	}
 	fSaveMessage->SetText("Enter valid intervals before saving.");
 }
+
+void MainWindow::_ApplyProfile(const char* name) {
+	for (const ProfilePreset& profile : kProfiles) {
+		if (strcmp(profile.name, name) != 0)
+			continue;
+		if (profile.focus <= 0) {
+			if (BMenuItem* item = fProfile->Menu()->FindItem("Custom"))
+				item->SetMarked(true);
+			fSaveMessage->SetText("Custom profile keeps the values entered above.");
+			return;
+		}
+
+		char value[16];
+		snprintf(value, sizeof(value), "%ld", (long)profile.focus);
+		fFocus->SetText(value);
+		snprintf(value, sizeof(value), "%ld", (long)profile.rest);
+		fBreak->SetText(value);
+		snprintf(value, sizeof(value), "%ld", (long)profile.longRest);
+		fLongBreak->SetText(value);
+		snprintf(value, sizeof(value), "%ld", (long)profile.every);
+		fEvery->SetText(value);
+		_SendSettings();
+		return;
+	}
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+const char* MainWindow::_ProfileNameFor(int32 focus, int32 rest, int32 longRest,
+	int32 every) const {
+	for (const ProfilePreset& profile : kProfiles) {
+		if (profile.focus > 0 && profile.focus == focus && profile.rest == rest
+			&& profile.longRest == longRest && profile.every == every)
+			return profile.name;
+	}
+	return "Custom";
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void MainWindow::_UpdateProfileSelection() {
+	long focus, rest, longRest, every;
+	const char* profile = "Custom";
+	if (ParseSetting(fFocus->Text(), 1, 180, focus)
+		&& ParseSetting(fBreak->Text(), 1, 180, rest)
+		&& ParseSetting(fLongBreak->Text(), 1, 180, longRest)
+		&& ParseSetting(fEvery->Text(), 2, 12, every)) {
+		profile = _ProfileNameFor(focus, rest, longRest, every);
+	}
+	if (BMenuItem* item = fProfile->Menu()->FindItem(profile))
+		item->SetMarked(true);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
 
 void
 MainWindow::MessageReceived(BMessage* message)
@@ -285,6 +379,16 @@ MainWindow::MessageReceived(BMessage* message)
 		return;
 	}
 	if (message->what == kSave) { _SendSettings(); return; }
+	if (message->what == kSelectProfile) {
+		const char* profile;
+		if (message->FindString("profile", &profile) == B_OK)
+			_ApplyProfile(profile);
+		return;
+	}
+	if (message->what == kFieldEdited) {
+		_UpdateProfileSelection();
+		return;
+	}
 	if (message->what == kSelectMonitor) {
 		const char* monitor;
 		if (message->FindString("monitor", &monitor) == B_OK)
@@ -365,6 +469,10 @@ MainWindow::_UpdateControls()
 		BString label = fPreferences.selectedMonitor.IsEmpty()
 			? "All screens" : fPreferences.selectedMonitor;
 		if (BMenuItem* item = fMonitor->Menu()->FindItem(label.String()))
+			item->SetMarked(true);
+		if (BMenuItem* item = fProfile->Menu()->FindItem(_ProfileNameFor(
+			fSession.focusMinutes, fSession.breakMinutes,
+			fSession.longBreakMinutes, fSession.longBreakEvery)))
 			item->SetMarked(true);
 		fSettingsInitialized = true;
 	}
