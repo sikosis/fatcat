@@ -15,9 +15,7 @@ static const char* kFiles[] = {
 };
 static const int32 kUnlocks[] = { 0, 1, 3, 6 };
 
-static float
-RandomUnit()
-{
+static float RandomUnit() {
 	return (float)rand() / (float)RAND_MAX;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
@@ -50,9 +48,7 @@ CatView::~CatView() = default;
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-CatView::AttachedToWindow()
-{
+void CatView::AttachedToWindow() {
 	FatCatDebug("CatView::AttachedToWindow this=%p window=%p",
 		(void*)this, (void*)Window());
 	_Reset();
@@ -64,9 +60,7 @@ CatView::AttachedToWindow()
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-float
-CatView::_CatSize() const
-{
+float CatView::_CatSize() const {
 	float count = std::max<size_t>(1, fCats.size());
 	return std::max(96.0f, std::min({ 208.0f, Bounds().Width() / count,
 		Bounds().Height() * 0.42f }));
@@ -74,9 +68,7 @@ CatView::_CatSize() const
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-CatView::_Reset()
-{
+void CatView::_Reset() {
 	std::vector<int32> available;
 	for (int32 id = 0; id < 4; ++id) {
 		if (fPreview || fCompletedBreaks >= kUnlocks[id])
@@ -117,17 +109,13 @@ CatView::_Reset()
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-CatView::FrameResized(float, float)
-{
+void CatView::FrameResized(float, float) {
 	_Reset();
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-CatView::_ChooseActivity(Cat& cat)
-{
+void CatView::_ChooseActivity(Cat& cat) {
 	static const float weights[4][6] = {
 		{ .30, .08, .08, .14, .15, .25 }, { .55, .10, .14, .06, .10, .05 },
 		{ .62, .12, .10, .05, .07, .04 }, { .35, .10, .18, .08, .19, .10 }
@@ -151,9 +139,7 @@ CatView::_ChooseActivity(Cat& cat)
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-BRect
-CatView::_CatFrame(const Cat& cat) const
-{
+BRect CatView::_CatFrame(const Cat& cat) const {
 	float size = _CatSize();
 	float groundTop = Bounds().Height() * .55f;
 	float floorY = Bounds().Height() - size - 16;
@@ -166,9 +152,7 @@ CatView::_CatFrame(const Cat& cat) const
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-CatView::_Advance(float seconds)
-{
+void CatView::_Advance(float seconds) {
 	float dt = std::clamp(seconds, 0.0f, 0.1f);
 	float size = _CatSize();
 	float maxX = std::max(0.0f, Bounds().Width() - size);
@@ -227,9 +211,7 @@ CatView::_Advance(float seconds)
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-CatView::MessageReceived(BMessage* message)
-{
+void CatView::MessageReceived(BMessage* message) {
 	if (message->what == kAnimate) {
 		bigtime_t now = system_time();
 		_Advance((now - fLastTick) / 1000000.0f);
@@ -241,9 +223,7 @@ CatView::MessageReceived(BMessage* message)
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-CatView::Draw(BRect update)
-{
+void CatView::Draw(BRect update) {
 	if (++fDrawLogCount <= 3 || fDrawLogCount == 60)
 		FatCatDebug("CatView::Draw this=%p n=%d update=(%.0f,%.0f,%.0f,%.0f) window=%p",
 			(void*)this, fDrawLogCount, update.left, update.top, update.right,

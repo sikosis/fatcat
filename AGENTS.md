@@ -43,7 +43,14 @@ ie.
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
+here is another example of a function:-
 
+bool BreakWindow::QuitRequested() {
+	return true;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+- Return variable type should be on the same line
 - Use Australian English for variables and other names ie. colour, flavour but use color for conventions.
 - Favour clear names, small focused units, explicit error handling and simple control flow over cleverness.
 - Preserve compatibility with the versions declared by the project. Avoid speculative abstractions and premature optimization.

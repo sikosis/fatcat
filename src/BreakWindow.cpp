@@ -101,9 +101,7 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-BreakWindow::_SendAction(uint32 what)
-{
+void BreakWindow::_SendAction(uint32 what) {
 	FatCatDebug("BreakWindow action what=0x%x already=%d",
 		(unsigned)what, (int)fActionSent);
 	if (fActionSent)
@@ -116,18 +114,14 @@ BreakWindow::_SendAction(uint32 what)
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-bool
-BreakWindow::QuitRequested()
-{
+bool BreakWindow::QuitRequested() {
 	FatCatDebug("BreakWindow QuitRequested");
 	return true;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-void
-BreakWindow::MessageReceived(BMessage* message)
-{
+void BreakWindow::MessageReceived(BMessage* message) {
 	if (message->what == B_WINDOW_ACTIVATED)
 		FatCatDebug("BreakWindow: WINDOW_ACTIVATED");
 	if (message->what == B_WORKSPACE_ACTIVATED)
