@@ -64,6 +64,9 @@ MainWindow::MainWindow(const Session& session, const Preferences& preferences)
 	tabs->AddTab(_BuildCatsTab(session, preferences));
 	tabs->TabAt(1)->SetLabel("Cats");
 	BLayoutBuilder::Group<>(this, B_VERTICAL).SetInsets(12).Add(tabs);
+	// Fit the window to the taller second ("Cats") tab instead of leaving the
+	// extra empty space the initial frame created.
+	ResizeToPreferred();
 	_UpdateControls();
 	BMessage tick(kWindowTick);
 	fTicker = std::make_unique<BMessageRunner>(BMessenger(this), &tick, 1000000);
@@ -121,7 +124,7 @@ MainWindow::_BuildTimerTab()
 		.SetInsets(12)
 		.Add(fStatus)
 		.AddGroup(B_HORIZONTAL, 8)
-			.Add(fPrimary).Add(fStop).Add(preview).AddGlue().Add(quit).Add(about)
+			.Add(fPrimary).Add(fStop).Add(preview).AddGlue().Add(about).Add(quit)
 		.End()
 		.Add(new BSeparatorView(B_HORIZONTAL))
 		.AddGrid(8, 8)
