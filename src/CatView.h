@@ -49,6 +49,4 @@ private:
 	std::unique_ptr<BBitmap> fBackdrop;
 	std::unique_ptr<BMessageRunner> fRunner;
 	bigtime_t fLastTick = 0;
-	int fDrawLogCount = 0;
-	int fAnimLogCount = 0;
 };

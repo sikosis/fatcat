@@ -1,7 +1,6 @@
 #include "BreakWindow.h"
 
 #include "CatView.h"
-#include "Debug.h"
 #include "Messages.h"
 
 #include <Application.h>
@@ -38,13 +37,8 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 	fActionSent(false),
 	fPreviewSeconds(15),
 	fPreviewDeadline(system_time() + 15000000),
-	fCountdown(nullptr),
-	fMsgLogCount(0)
+	fCountdown(nullptr)
 {
-	FatCatDebug("BreakWindow ctor this=%p preview=%d blocking=%d frame=(%.0f,%.0f,%.0f,%.0f) ws=0x%x",
-		(void*)this, (int)preview, (int)blocking,
-		frame.left, frame.top, frame.right, frame.bottom,
-		(unsigned)CurrentWorkspaceMask());
 	AddShortcut(B_ESCAPE, 0, new BMessage(preview ? kMsgDismiss : kMsgSkipBreak), this);
 
 	BBitmap* backdrop = nullptr;
@@ -97,8 +91,9 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 			? "Preview closes automatically · No progress is earned"
 			: "Esc to skip · Your next focus session starts after this break"));
 	panel->ResizeTo(std::min(430.0f, Bounds().Width() - 24), 205);
-	panel->MoveTo(std::max(12.0f, Bounds().Width() - panel->Bounds().Width() - 12),
-		48);
+	// Keep the panel clear of the Deskbar, which sits in a screen corner and can
+	// be set to stay on top; anchor it to the left edge instead.
+	panel->MoveTo(12, 48);
 	cats->AddChild(panel);
 
 	if (preview) {
@@ -110,8 +105,6 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 
 
 void BreakWindow::_SendAction(uint32 what) {
-	FatCatDebug("BreakWindow action what=0x%x already=%d",
-		(unsigned)what, (int)fActionSent);
 	if (fActionSent)
 		return;
 	fActionSent = true;
@@ -123,22 +116,12 @@ void BreakWindow::_SendAction(uint32 what) {
 
 
 bool BreakWindow::QuitRequested() {
-	FatCatDebug("BreakWindow QuitRequested");
 	return true;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
 void BreakWindow::MessageReceived(BMessage* message) {
-	if (++fMsgLogCount <= 5 || fMsgLogCount % 200 == 0)
-		FatCatDebug("BreakWindow msg this=%p n=%d what=0x%x preview=%d",
-			(void*)this, fMsgLogCount, (unsigned)message->what, (int)fPreview);
-	if (message->what == B_WINDOW_ACTIVATED)
-		FatCatDebug("BreakWindow: WINDOW_ACTIVATED");
-	if (message->what == B_WORKSPACE_ACTIVATED)
-		FatCatDebug("BreakWindow: WORKSPACE_ACTIVATED");
-	if (message->what == B_MOUSE_DOWN)
-		FatCatDebug("BreakWindow: MOUSE_DOWN");
 	if (message->what == kMsgBreakCountdown) {
 		const char* value;
 		if (!fPreview && message->FindString("countdown", &value) == B_OK)

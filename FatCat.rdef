@@ -6,8 +6,8 @@ resource(101, "BEOS:ICON") #'VICN' import "artwork/fatcat-icon.hvif";
 
 resource app_version {
 	major  = 0,
-	middle = 0,
-	minor  = 7,
+	middle = 7,
+	minor  = 5,
 	variety = B_APPV_FINAL,
 	internal = 0,
 	short_info = "Fat Cat Pomodoro",

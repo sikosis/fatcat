@@ -1,4 +1,4 @@
-# Fat Cat Pomodoro v0.07 for Haiku
+# Fat Cat Pomodoro v0.075 for Haiku
 
 <p align="center">
   <img src="artwork/fatcat-icon.svg" alt="Fat Cat icon" width="128" height="128">
@@ -57,16 +57,16 @@ after manually restarting Deskbar to restore the item.
 
 HaikuPorts is the intended release format and produces a standard installable
 `.hpkg`. The recipe template is in
-[`packaging/haikuports/fatcat-0.07.recipe.in`](packaging/haikuports/fatcat-0.07.recipe.in).
+[`packaging/haikuports/fatcat-0.075.recipe.in`](packaging/haikuports/fatcat-0.075.recipe.in).
 
-After publishing the GitHub repository and creating the `v0.07` tag, replace
+After publishing the GitHub repository and creating the `v0.075` tag, replace
 the template's `@HOMEPAGE@`, `@SOURCE_URI@`, `@CHECKSUM_SHA256@`, and
 `@SOURCE_DIR@` values. Copy the completed recipe to
-`haiku-apps/fatcat/fatcat-0.07.recipe` in a HaikuPorts tree and build it on
+`haiku-apps/fatcat/fatcat-0.075.recipe` in a HaikuPorts tree and build it on
 Haiku with:
 
 ```sh
-haikuporter -S fatcat-0.07
+haikuporter -S fatcat-0.075
 ```
 
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar

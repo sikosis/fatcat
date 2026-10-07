@@ -1,10 +1,7 @@
 #include "CatView.h"
 
-#include "Debug.h"
-
 #include <Message.h>
 #include <TranslationUtils.h>
-#include <Window.h>
 
 #include <algorithm>
 #include <cmath>
@@ -35,12 +32,6 @@ CatView::CatView(const Preferences& preferences, int32 completedBreaks, bool pre
 	SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	for (int32 i = 0; i < 4; ++i)
 		fSheets[i].reset(BTranslationUtils::GetBitmap(ResourcePath(kFiles[i]).String()));
-	int loaded = 0;
-	for (int32 i = 0; i < 4; ++i)
-		if (fSheets[i])
-			loaded++;
-	FatCatDebug("CatView ctor this=%p backdrop=%d sheets=%d/4",
-		(void*)this, (int)(fBackdrop != nullptr), (int)loaded);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -50,8 +41,6 @@ CatView::~CatView() = default;
 
 
 void CatView::AttachedToWindow() {
-	FatCatDebug("CatView::AttachedToWindow this=%p window=%p",
-		(void*)this, (void*)Window());
 	_Reset();
 	if (!fReducedMotion) {
 		BMessage message(kAnimate);
@@ -215,11 +204,6 @@ void CatView::_Advance(float seconds) {
 void CatView::MessageReceived(BMessage* message) {
 	if (message->what == kAnimate) {
 		bigtime_t now = system_time();
-		if (++fAnimLogCount <= 5 || fAnimLogCount % 90 == 0)
-			FatCatDebug("CatView kAnimate this=%p n=%d hidden=%d active=%d",
-				(void*)this, fAnimLogCount,
-				Window() != nullptr ? (int)Window()->IsHidden() : -1,
-				Window() != nullptr ? (int)Window()->IsActive() : -1);
 		_Advance((now - fLastTick) / 1000000.0f);
 		fLastTick = now;
 		return;
@@ -230,10 +214,6 @@ void CatView::MessageReceived(BMessage* message) {
 
 
 void CatView::Draw(BRect update) {
-	if (++fDrawLogCount <= 3 || fDrawLogCount == 60)
-		FatCatDebug("CatView::Draw this=%p n=%d update=(%.0f,%.0f,%.0f,%.0f) window=%p",
-			(void*)this, fDrawLogCount, update.left, update.top, update.right,
-			update.bottom, (void*)Window());
 	SetDrawingMode(B_OP_COPY);
 	if (fBackdrop)
 		DrawBitmap(fBackdrop.get(), update, update);

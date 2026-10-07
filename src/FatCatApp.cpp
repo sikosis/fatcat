@@ -1,7 +1,6 @@
 #include "FatCatApp.h"
 
 #include "BreakWindow.h"
-#include "Debug.h"
 #include "DeskbarView.h"
 #include "MainWindow.h"
 #include "Messages.h"
@@ -45,9 +44,6 @@ void FatCatApp::ReadyToRun() {
 	} else {
 		fMainWindow->Show();
 	}
-	FatCatDebug("ReadyToRun: mainHidden=%d", (int)fMainWindow->IsHidden());
-	FatCatDebug("ReadyToRun: cli=%d phase=%d", (int)fCommandLineOnly,
-		(int)fSession.phase);
 	BMessage tick(kMsgTick);
 	fTicker = std::make_unique<BMessageRunner>(BMessenger(this), &tick, 1000000);
 	if (fSession.phase == Phase::Break && !fSession.paused)
@@ -191,9 +187,6 @@ void FatCatApp::_ShowMain() {
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 void FatCatApp::_CloseOverlays(bool restoreMain) {
-	FatCatDebug("_CloseOverlays: restore=%d count=%d pending=%d",
-		(int)restoreMain, (int)fBreakWindows.size(),
-		(int)fOverlayRequestPending);
 	bool showMain = restoreMain && fRestoreMainAfterOverlay;
 	if (fOverlayRequestPending) {
 		fOverlayRequestPending = false;
@@ -211,9 +204,6 @@ void FatCatApp::_CloseOverlays(bool restoreMain) {
 void
 FatCatApp::_ShowOverlay(bool preview)
 {
-	FatCatDebug("_ShowOverlay: preview=%d pending=%d main=%p hidden=%d",
-		(int)preview, (int)fOverlayRequestPending, (void*)fMainWindow,
-		fMainWindow != nullptr ? (int)fMainWindow->IsHidden() : -1);
 	if (fOverlayRequestPending)
 		return;
 	_CloseOverlays(false);
@@ -256,21 +246,13 @@ void FatCatApp::_CreateOverlay(bool preview, bool mainWasVisible) {
 		fBreakWindows.push_back(window);
 		window->Show();
 		window->Activate();
-		FatCatDebug("  window shown frame=(%.0f,%.0f,%.0f,%.0f) actual=(%.0f,%.0f,%.0f,%.0f) hidden=%d ws=0x%x",
-			frame.left, frame.top, frame.right, frame.bottom,
-			window->Frame().left, window->Frame().top,
-			window->Frame().right, window->Frame().bottom,
-			(int)window->IsHidden(), (unsigned)window->Workspaces());
 		BMessage countdown(kMsgBreakCountdown);
 		countdown.AddString("countdown", fSession.Countdown(time(nullptr)));
 		window->PostMessage(&countdown);
 	} while (index <= kMaxScreens && screen.SetToNext() == B_OK);
-	FatCatDebug("_CreateOverlay: after loop count=%d index=%d valid=%d",
-		(int)fBreakWindows.size(), (int)index, (int)screen.IsValid());
 	// Disconnected selection falls back to the first connected screen.
 	if (fBreakWindows.empty()) {
 		BScreen first;
-		FatCatDebug("_CreateOverlay: fallback valid=%d", (int)first.IsValid());
 		if (!first.IsValid() || !first.Frame().IsValid())
 			return;
 		BreakWindow* window = new BreakWindow(first.Frame(), fPreferences,
@@ -327,9 +309,6 @@ void FatCatApp::MessageReceived(BMessage* message) {
 			message->FindBool("preview", &preview);
 			message->FindBool("was_visible", &wasVisible);
 			message->FindInt32("request", &request);
-			FatCatDebug("kMsgWindowHidden: request=%d want=%d pending=%d",
-				(int)request, (int)fOverlayRequestId,
-				(int)fOverlayRequestPending);
 			if (fOverlayRequestPending && request == fOverlayRequestId)
 				_CreateOverlay(preview, wasVisible);
 			break;
@@ -338,7 +317,6 @@ void FatCatApp::MessageReceived(BMessage* message) {
 			AboutRequested();
 			break;
 		case kMsgShow:
-			FatCatDebug("app got kMsgShow");
 			_ShowMain();
 			break;
 		case kMsgStart:
@@ -376,7 +354,6 @@ void FatCatApp::MessageReceived(BMessage* message) {
 			_StateChanged();
 			break;
 		case kMsgPreview:
-			FatCatDebug("app got kMsgPreview");
 			_ShowOverlay(true);
 			break;
 		case kMsgDismiss:

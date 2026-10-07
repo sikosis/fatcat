@@ -1,5 +1,4 @@
 #include "DeskbarView.h"
-#include "Debug.h"
 #include "Messages.h"
 
 #include <Archivable.h>
@@ -139,9 +138,6 @@ public:
 uint32 buttons = B_PRIMARY_MOUSE_BUTTON;
 	if (Window() && Window()->CurrentMessage())
 		Window()->CurrentMessage()->FindInt32("buttons", (int32*)&buttons);
-	FatCatDebug("DeskbarView MouseDown buttons=0x%x -> %s",
-		(unsigned)buttons,
-		(buttons & B_SECONDARY_MOUSE_BUTTON) ? "preview" : "show");
 	_Send(buttons & B_SECONDARY_MOUSE_BUTTON ? kMsgPreview : kMsgShow);
 	}
 
