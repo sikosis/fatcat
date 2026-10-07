@@ -91,9 +91,8 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 			? "Preview closes automatically · No progress is earned"
 			: "Esc to skip · Your next focus session starts after this break"));
 	panel->ResizeTo(std::min(430.0f, Bounds().Width() - 24), 205);
-	// Keep the panel clear of the Deskbar, which sits in a screen corner and can
-	// be set to stay on top; anchor it to the left edge instead.
-	panel->MoveTo(12, 48);
+	panel->MoveTo((Bounds().Width() - panel->Bounds().Width()) / 2,
+		(Bounds().Height() - panel->Bounds().Height()) / 2);
 	cats->AddChild(panel);
 
 	if (preview) {
