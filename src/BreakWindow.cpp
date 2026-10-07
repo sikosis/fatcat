@@ -18,25 +18,32 @@
 
 static constexpr uint32 kPreviewTick = 'pvtk';
 
+static uint32 CurrentWorkspaceMask() {
+	int32 workspace = current_workspace();
+	if (workspace >= 0 && workspace < 32)
+		return uint32(1) << workspace;
+	return B_ALL_WORKSPACES;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 completedBreaks,
 	bool preview, bool blocking)
 	:
 	BWindow(frame, "Fat Cat break", B_NO_BORDER_WINDOW_LOOK,
 		blocking ? B_MODAL_APP_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL,
 		B_WILL_ACCEPT_FIRST_CLICK | B_NOT_CLOSABLE | B_NOT_ZOOMABLE
-			| B_NOT_MINIMIZABLE | B_NOT_MOVABLE | B_NOT_RESIZABLE),
+			| B_NOT_MINIMIZABLE | B_NOT_MOVABLE | B_NOT_RESIZABLE,
+		CurrentWorkspaceMask()),
 	fPreview(preview),
 	fActionSent(false),
 	fPreviewSeconds(15),
 	fPreviewDeadline(system_time() + 15000000),
 	fCountdown(nullptr)
 {
-	int32 workspace = current_workspace();
-	FatCatDebug("BreakWindow ctor this=%p preview=%d blocking=%d frame=(%.0f,%.0f,%.0f,%.0f) workspace=%d",
+	FatCatDebug("BreakWindow ctor this=%p preview=%d blocking=%d frame=(%.0f,%.0f,%.0f,%.0f) ws=0x%x",
 		(void*)this, (int)preview, (int)blocking,
-		frame.left, frame.top, frame.right, frame.bottom, (int)workspace);
-	if (workspace >= 0 && workspace < 32)
-		SetWorkspaces(uint32(1) << workspace);
+		frame.left, frame.top, frame.right, frame.bottom,
+		(unsigned)CurrentWorkspaceMask());
 	AddShortcut(B_ESCAPE, 0, new BMessage(preview ? kMsgDismiss : kMsgSkipBreak), this);
 
 	BBitmap* backdrop = nullptr;

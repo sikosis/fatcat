@@ -10,17 +10,13 @@
 #include <cstdlib>
 #include <cstring>
 
-static void
-Usage()
-{
+static void Usage() {
 	fprintf(stderr, "usage: fatcat-cli {about|start|pause|resume|stop|preview|dismiss|status|quit|configure FOCUS BREAK}\n");
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-static bool
-FindOrLaunchApplication(BMessenger& target)
-{
+static bool FindOrLaunchApplication(BMessenger& target) {
 	target = BMessenger(kAppSignature);
 	if (target.IsValid())
 		return true;
@@ -41,13 +37,11 @@ FindOrLaunchApplication(BMessenger& target)
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
-int
-main(int argc, char** argv)
-{
-	BApplication application("application/x-vnd.arkane-FatCatControl");
+int main(int argc, char** argv) {
+	BApplication application("application/x-vnd.sikosis-fatcatControl");
 	if (argc < 2) { Usage(); return 2; }
 	if (strcmp(argv[1], "about") == 0 || strcmp(argv[1], "--about") == 0) {
-		printf("Fat Cat Pomodoro v%s for Haiku\n%s\n", kAppVersion,
+		printf("Fat Cat Pomodoro v%s\n%s\n", kAppVersion,
 			kAppDescription);
 		return 0;
 	}

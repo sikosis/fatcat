@@ -2,14 +2,14 @@
 
 #include <SupportDefs.h>
 
-constexpr const char* kAppSignature = "application/x-vnd.arkane-FatCat";
+constexpr const char* kAppSignature = "application/x-vnd.sikosis-fatcat";
 constexpr const char* kDeskbarSignature
-	= "application/x-vnd.arkane-FatCatDeskbar";
+	= "application/x-vnd.sikosis-fatcatDeskbar";
 constexpr const char* kAppName = "Fat Cat";
 constexpr const char* kAppVersion = "0.07";
 constexpr const char* kAppDescription
 	= "A cozy Pomodoro timer that fills your breaks with collectible animated cats.";
-constexpr const char* kDeskbarItemName = "FatCatDeskbar";
+constexpr const char* kDeskbarItemName = "fatcatDeskbar";
 
 enum : uint32 {
 	kMsgShow = 'fcsh',

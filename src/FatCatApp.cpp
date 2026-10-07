@@ -112,7 +112,7 @@ void FatCatApp::_RemoveDeskbarItem() {
 
 void FatCatApp::AboutRequested() {
 	BString aboutText("Fat Cat Pomodoro\n\nVersion: ");
-	aboutText << kAppVersion << "\n";
+	aboutText << kAppVersion << "\n\n";
 	aboutText << kAppDescription
 		<< "\n\nDesigned by Sikosis\n\n"
 			"Original Fat Cat concept and Sprites ©2026 arkane\n\n"

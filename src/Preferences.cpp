@@ -11,9 +11,7 @@
 #include <algorithm>
 #include <cstdio>
 
-static BString
-CleanName(const char* input, const char* fallback)
-{
+static BString CleanName(const char* input, const char* fallback) {
 	BString value(input ? input : "");
 	value.Trim();
 	if (value.Length() > 24)
@@ -25,26 +23,25 @@ CleanName(const char* input, const char* fallback)
 	}
 	return value.IsEmpty() ? BString(fallback) : value;
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-bool
-Preferences::IsFavorite(int32 id) const
-{
+
+bool Preferences::IsFavorite(int32 id) const {
 	return std::find(favorites.begin(), favorites.end(), id) != favorites.end();
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-Preferences::ToggleFavorite(int32 id)
-{
+
+void Preferences::ToggleFavorite(int32 id) {
 	auto found = std::find(favorites.begin(), favorites.end(), id);
 	if (found == favorites.end())
 		favorites.push_back(id);
 	else
 		favorites.erase(found);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-Preferences::Archive(BMessage& into) const
-{
+void Preferences::Archive(BMessage& into) const {
 	into.MakeEmpty();
 	into.AddInt32("version", 1);
 	into.AddBool("reduced_motion", reducedMotion);
@@ -53,12 +50,11 @@ Preferences::Archive(BMessage& into) const
 	for (int32 i = 0; i < 4; ++i)
 		into.AddString("cat_name", catNames[i]);
 	for (int32 id : favorites)
-		into.AddInt32("favorite", id);
+		into.AddInt32("favourite", id);
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-void
-Preferences::Restore(const BMessage& from)
-{
+void Preferences::Restore(const BMessage& from) {
 	from.FindBool("reduced_motion", &reducedMotion);
 	from.FindBool("blocking_break", &blockingBreak);
 	const char* monitor;
@@ -77,10 +73,10 @@ Preferences::Restore(const BMessage& from)
 			favorites.push_back(id);
 	}
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-BString
-SettingsPath(const char* leaf)
-{
+
+BString SettingsPath(const char* leaf) {
 	BPath path;
 	if (find_directory(B_USER_SETTINGS_DIRECTORY, &path, true) != B_OK)
 		return BString();
@@ -89,18 +85,17 @@ SettingsPath(const char* leaf)
 	path.Append(leaf);
 	return path.Path();
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-status_t
-LoadFlatMessage(const char* leaf, BMessage& message)
-{
+
+status_t LoadFlatMessage(const char* leaf, BMessage& message) {
 	BString path = SettingsPath(leaf);
 	BFile file(path.String(), B_READ_ONLY);
 	return file.InitCheck() == B_OK ? message.Unflatten(&file) : file.InitCheck();
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-status_t
-SaveFlatMessage(const char* leaf, const BMessage& message)
-{
+status_t SaveFlatMessage(const char* leaf, const BMessage& message) {
 	BString finalPath = SettingsPath(leaf);
 	BString tempPath(finalPath);
 	tempPath << ".new";
@@ -115,10 +110,10 @@ SaveFlatMessage(const char* leaf, const BMessage& message)
 	}
 	return rename(tempPath.String(), finalPath.String());
 }
+//---------------------------------------------------------------------------------------------------------------------------------//
 
-BString
-ResourcePath(const char* leaf)
-{
+
+BString ResourcePath(const char* leaf) {
 	app_info info;
 	BPath path;
 	if (be_app && be_app->GetAppInfo(&info) == B_OK) {
@@ -130,7 +125,7 @@ ResourcePath(const char* leaf)
 		if (BEntry(path.Path()).Exists())
 			return path.Path();
 	}
-	BString installed("/boot/system/data/FatCat/assets/");
+	BString installed("/boot/system/data/fatcat/assets/");
 	installed << leaf;
 	return installed;
 }
