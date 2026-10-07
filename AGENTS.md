@@ -34,18 +34,12 @@
 
 ## Coding style
 
-- Use the formatter and linter already configured by the repository; match nearby code.
-- K&R style for braces
+- K&R style for braces (see example below)
 - Every function's next line will be "//---------------------------------------------------------------------------------------------------------------------------------//" (no quotes) followed by two newlines.
 
 ie.
 
-}
-//---------------------------------------------------------------------------------------------------------------------------------//
-
-here is another example of a function:-
-
-bool BreakWindow::QuitRequested() {
+bool MyWindow::MyFunction() {
 	return true;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
@@ -54,34 +48,33 @@ bool BreakWindow::QuitRequested() {
 - Use Australian English for variables and other names ie. colour, flavour but use color for conventions.
 - Favour clear names, small focused units, explicit error handling and simple control flow over cleverness.
 - Preserve compatibility with the versions declared by the project. Avoid speculative abstractions and premature optimization.
-- Comments should explain intent, constraints, or non-obvious tradeoffs—not restate the code.
-- Public behaviour and APIs should be documented. Update user-facing documentation when behaviour, configuration, or commands change.
+- Comments should explain intent, constraints or non-obvious tradeoffs—not restate the code.
+- Public behaviour and APIs should be documented. Update user-facing documentation when behaviour, configuration or commands change.
 
 ## Dependencies and generated artifacts
 
-- Prefer the standard library and existing dependencies. Add a dependency only when its benefit outweighs maintenance, security, size, and licensing costs.
+- Prefer the standard library and existing dependencies. Add a dependency only when its benefit outweighs maintenance, security, size and licensing costs.
 - Use the ecosystem's package manager; do not manually copy third-party source into the repository.
 - Regenerate derived artifacts with their documented tool and include source changes alongside generated output when the repository tracks both.
 - Keep dependency lockfiles when this repository treats them as reproducibility inputs; update them only through the package manager.
 
 ## Versioning and releases
 
-- Start releases at `0.01` and increment the version by `0.001` for each
-  bug-fix change: `0.07`, `0.071`, `0.072`, and so on.
+- When the version is displayed in text generally it will be prefixed with a small v  ie. v<MAJOR>.<MINOR><PATCH>
+- Every time we make a change to the app, that's a patch and so we increment by 0.01
+- There will never be a trailing zero on a version number ie. never 0.10
+- <PATCH> number will be right after the <MINOR> number with no dot in between
 - Use the same version in tags, application metadata, CLI output, package
   recipes, and documentation.
-- Encode the version in Haiku's `middle` and `minor` resource fields using the
-  two least-significant digits after the decimal point: `0.07` is
-  `middle=0, minor=7`, while `0.074` is `middle=7, minor=4`.
 - Treat released versions and published artifacts as immutable. Do **not** delete or replace a previous package to reuse its version; publish a new version instead.
 - Deprecate before removing public APIs when practical. Document migrations and breaking changes.
 - Update the changelog when one exists and keep release notes focused on user-visible changes.
-- Do not tag, publish, deploy, or push a release unless the user explicitly requests it and the required checks pass.
+- Do not tag, publish, deploy or push a release unless the user explicitly requests it and the required checks pass.
 
 
 
 ## Git and review
 
 - Keep commits focused and describe the reason for the change. Do not rewrite history or force-push unless explicitly requested.
-- Review the final diff for accidental changes, debug output, secrets, platform-specific paths, and missing tests or documentation.
-- In the final handoff, summarize what changed, why, validation performed, and any remaining risks or follow-up work.
+- Review the final diff for accidental changes, debug output, secrets, platform-specific paths and missing tests or documentation.
+- In the final handoff, summarise what changed, why, validation performed and any remaining risks or follow-up work.
