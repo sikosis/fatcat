@@ -91,8 +91,7 @@ BreakWindow::BreakWindow(BRect frame, const Preferences& preferences, int32 comp
 			? "Preview closes automatically · No progress is earned"
 			: "Esc to skip · Your next focus session starts after this break"));
 	panel->ResizeTo(std::min(430.0f, Bounds().Width() - 24), 205);
-	panel->MoveTo((Bounds().Width() - panel->Bounds().Width()) / 2,
-		(Bounds().Height() - panel->Bounds().Height()) / 2);
+	panel->MoveTo((Bounds().Width() - panel->Bounds().Width()) / 2, 48);
 	cats->AddChild(panel);
 
 	if (preview) {
