@@ -167,6 +167,31 @@ else
 	} > "$buildConfiguration"
 fi
 
+gitName=$(git -C "$projectDirectory" config user.name || true)
+gitEmail=$(git -C "$projectDirectory" config user.email || true)
+if [ -z "$gitName" ] || [ -z "$gitEmail" ]; then
+	packager=$(awk -F= '
+		/^[[:space:]]*PACKAGER=/ {
+			value = substr($0, index($0, "=") + 1)
+			gsub(/^[[:space:]\"]+|[[:space:]\"]+$/, "", value)
+			print value
+			exit
+		}' "$buildConfiguration")
+	derivedName=$(printf '%s\n' "$packager" \
+		| sed -n 's/^\(.*\) <[^>]*>$/\1/p')
+	derivedEmail=$(printf '%s\n' "$packager" \
+		| sed -n 's/^.*<\([^>]*\)>$/\1/p')
+	gitName=${gitName:-$derivedName}
+	gitEmail=${gitEmail:-$derivedEmail}
+fi
+if [ -z "$gitName" ] || [ -z "$gitEmail" ]; then
+	echo "Set PACKAGER in haikuports.conf or configure git user.name and user.email." >&2
+	exit 1
+fi
+
+git -C "$submissionTree" config user.name "$gitName"
+git -C "$submissionTree" config user.email "$gitEmail"
+
 echo "Validating the public recipe with HaikuPorter..."
 (
 	cd "$submissionTree"
@@ -181,15 +206,6 @@ if [ -z "$package" ]; then
 	exit 1
 fi
 
-gitName=$(git -C "$projectDirectory" config user.name || true)
-gitEmail=$(git -C "$projectDirectory" config user.email || true)
-if [ -z "$gitName" ] || [ -z "$gitEmail" ]; then
-	echo "Configure git user.name and user.email before submitting." >&2
-	exit 1
-fi
-
-git -C "$submissionTree" config user.name "$gitName"
-git -C "$submissionTree" config user.email "$gitEmail"
 git -C "$submissionTree" add \
 	"haiku-apps/fatcat/fatcat-$releaseVersion.recipe"
 git -C "$submissionTree" commit -m \
