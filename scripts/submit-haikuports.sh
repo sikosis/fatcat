@@ -114,6 +114,100 @@ if ! command -v curl >/dev/null 2>&1; then
 	exit 1
 fi
 
+githubToken=${GITHUB_TOKEN:-}
+if [ -z "$githubToken" ]; then
+	if [ ! -t 0 ]; then
+		echo "Set GITHUB_TOKEN to a token with the public_repo scope." >&2
+		exit 1
+	fi
+	while [ -z "$githubToken" ]; do
+		echo "Paste the GitHub token once, then press Enter. Input remains hidden."
+		printf 'Token: '
+		trap 'stty echo; exit 1' HUP INT TERM
+		stty -echo
+		if ! read -r githubToken; then
+			stty echo
+			trap - HUP INT TERM
+			echo
+			exit 1
+		fi
+		tokenSuffix=$(printf '%s\n' "$githubToken" | sed 's/^.*\(....\)$/\1/')
+		printf '\nToken captured (ending in %s).\n' "$tokenSuffix"
+		printf 'Press Enter to validate, or paste a corrected token and press Enter: '
+		if ! read -r confirmation; then
+			stty echo
+			trap - HUP INT TERM
+			echo
+			exit 1
+		fi
+		stty echo
+		trap - HUP INT TERM
+		printf '\n'
+
+		case "$confirmation" in
+			"")
+				;;
+			ghp_*|github_pat_*)
+				githubToken=$confirmation
+				tokenSuffix=$(printf '%s\n' "$githubToken" \
+					| sed 's/^.*\(....\)$/\1/')
+				echo "Using the corrected token ending in $tokenSuffix."
+				;;
+			*)
+				echo "Input was not a recognised token; please try again." >&2
+				githubToken=
+				continue
+				;;
+		esac
+
+		case "$githubToken" in
+			ghp_*ghp_*|github_pat_*github_pat_*)
+				echo "The token appears to have been pasted twice; please try again." >&2
+				githubToken=
+				;;
+		esac
+	done
+fi
+if [ -z "$githubToken" ]; then
+	echo "A GitHub personal access token is required." >&2
+	exit 1
+fi
+
+githubApiGet()
+{
+	curl --fail --silent --show-error \
+		--header "Accept: application/vnd.github+json" \
+		--header "Authorization: Bearer $githubToken" \
+		--header "X-GitHub-Api-Version: 2022-11-28" \
+		"$1"
+}
+
+githubApiPost()
+{
+	curl --fail --silent --show-error \
+		--request POST \
+		--header "Accept: application/vnd.github+json" \
+		--header "Authorization: Bearer $githubToken" \
+		--header "X-GitHub-Api-Version: 2022-11-28" \
+		--header "Content-Type: application/json" \
+		--data-binary "@$2" \
+		"$1"
+}
+
+if ! userResponse=$(githubApiGet "https://api.github.com/user" 2>/dev/null); then
+	echo "GitHub rejected that token (HTTP 401)." >&2
+	echo "Create a valid classic personal access token with public_repo scope." >&2
+	exit 1
+fi
+githubUser=$(printf '%s\n' "$userResponse" | sed -n \
+	's/^[[:space:]]*"login": "\([^"]*\)",*/\1/p' | head -n 1)
+if [ -z "$githubUser" ]; then
+	echo "Could not determine the GitHub user for the supplied token." >&2
+	exit 1
+fi
+
+echo "Authenticated with GitHub as $githubUser."
+
 haikuporter=${HAIKUPORTER:-}
 if [ -z "$haikuporter" ] && command -v haikuporter >/dev/null 2>&1; then
 	haikuporter=$(command -v haikuporter)
@@ -210,55 +304,6 @@ git -C "$submissionTree" add \
 	"haiku-apps/fatcat/fatcat-$releaseVersion.recipe"
 git -C "$submissionTree" commit -m \
 	"haiku-apps/fatcat: add $releaseVersion"
-
-githubToken=${GITHUB_TOKEN:-}
-if [ -z "$githubToken" ]; then
-	if [ ! -t 0 ]; then
-		echo "Set GITHUB_TOKEN to a token with the public_repo scope." >&2
-		exit 1
-	fi
-	printf 'GitHub personal access token (input hidden): '
-	trap 'stty echo; exit 1' HUP INT TERM
-	stty -echo
-	read -r githubToken
-	stty echo
-	trap - HUP INT TERM
-	printf '\n'
-fi
-if [ -z "$githubToken" ]; then
-	echo "A GitHub personal access token is required." >&2
-	exit 1
-fi
-
-githubApiGet()
-{
-	curl --fail --silent --show-error \
-		--header "Accept: application/vnd.github+json" \
-		--header "Authorization: Bearer $githubToken" \
-		--header "X-GitHub-Api-Version: 2022-11-28" \
-		"$1"
-}
-
-githubApiPost()
-{
-	curl --fail --silent --show-error \
-		--request POST \
-		--header "Accept: application/vnd.github+json" \
-		--header "Authorization: Bearer $githubToken" \
-		--header "X-GitHub-Api-Version: 2022-11-28" \
-		--header "Content-Type: application/json" \
-		--data-binary "@$2" \
-		"$1"
-}
-
-userResponse="$submissionDirectory/github-user.json"
-githubApiGet "https://api.github.com/user" > "$userResponse"
-githubUser=$(sed -n \
-	's/^[[:space:]]*"login": "\([^"]*\)",*/\1/p' "$userResponse" | head -n 1)
-if [ -z "$githubUser" ]; then
-	echo "Could not determine the GitHub user for the supplied token." >&2
-	exit 1
-fi
 
 forkResponse="$submissionDirectory/github-fork.json"
 if ! githubApiGet "https://api.github.com/repos/$githubUser/haikuports" \

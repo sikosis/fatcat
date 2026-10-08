@@ -95,7 +95,8 @@ fork, pushes a feature branch, opens the upstream pull request, creates the
 GitHub release when needed, and uploads the validated `.hpkg`. It never
 force-pushes or replaces an existing release asset. The script uses `curl` and
 securely prompts for a GitHub personal access token when `GITHUB_TOKEN` is not
-already set; a classic token needs the `public_repo` scope.
+already set; a classic token needs the `public_repo` scope. Token input stays
+hidden, and the prompt confirms capture using only its final four characters.
 
 To generate and inspect the public recipe without building, pushing, or
 publishing anything, run `scripts/submit-haikuports.sh --prepare-only 0.17`.
