@@ -83,8 +83,7 @@ copying them into HaikuPorts or building the package. The versioned recipe
 template is
 [`packaging/haikuports/fatcat-0.17.recipe.in`](packaging/haikuports/fatcat-0.17.recipe.in).
 
-After pushing a release tag, prepare and submit its public HaikuPorts recipe
-with GitHub CLI authentication:
+After pushing a release tag, prepare and submit its public HaikuPorts recipe:
 
 ```sh
 make haikuports-submit VERSION=0.17
@@ -94,7 +93,9 @@ This downloads the tagged GitHub source archive, generates its public recipe,
 builds it in an isolated HaikuPorts checkout, creates or reuses your HaikuPorts
 fork, pushes a feature branch, opens the upstream pull request, creates the
 GitHub release when needed, and uploads the validated `.hpkg`. It never
-force-pushes or replaces an existing release asset.
+force-pushes or replaces an existing release asset. The script uses `curl` and
+securely prompts for a GitHub personal access token when `GITHUB_TOKEN` is not
+already set; a classic token needs the `public_repo` scope.
 
 To generate and inspect the public recipe without building, pushing, or
 publishing anything, run `scripts/submit-haikuports.sh --prepare-only 0.17`.

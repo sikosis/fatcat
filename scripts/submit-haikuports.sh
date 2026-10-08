@@ -109,12 +109,8 @@ if [ "$prepareOnly" = true ]; then
 	exit 0
 fi
 
-if ! command -v gh >/dev/null 2>&1; then
-	echo "GitHub CLI is required. Install gh and rerun this command." >&2
-	exit 1
-fi
-if ! gh auth status >/dev/null 2>&1; then
-	echo "GitHub CLI is not authenticated. Run: gh auth login" >&2
+if ! command -v curl >/dev/null 2>&1; then
+	echo "curl is required for GitHub API access." >&2
 	exit 1
 fi
 
@@ -199,44 +195,147 @@ git -C "$submissionTree" add \
 git -C "$submissionTree" commit -m \
 	"haiku-apps/fatcat: add $releaseVersion"
 
-githubUser=$(gh api user --jq .login)
-if ! gh repo view "$githubUser/haikuports" >/dev/null 2>&1; then
-	echo "Creating $githubUser/haikuports fork..."
-	gh repo fork haikuports/haikuports --clone=false
+githubToken=${GITHUB_TOKEN:-}
+if [ -z "$githubToken" ]; then
+	if [ ! -t 0 ]; then
+		echo "Set GITHUB_TOKEN to a token with the public_repo scope." >&2
+		exit 1
+	fi
+	printf 'GitHub personal access token (input hidden): '
+	trap 'stty echo; exit 1' HUP INT TERM
+	stty -echo
+	read -r githubToken
+	stty echo
+	trap - HUP INT TERM
+	printf '\n'
+fi
+if [ -z "$githubToken" ]; then
+	echo "A GitHub personal access token is required." >&2
+	exit 1
 fi
 
-if gh pr list --repo haikuports/haikuports --head "$githubUser:$branch" \
-	--json url --jq '.[0].url' | grep -q .; then
+githubApiGet()
+{
+	curl --fail --silent --show-error \
+		--header "Accept: application/vnd.github+json" \
+		--header "Authorization: Bearer $githubToken" \
+		--header "X-GitHub-Api-Version: 2022-11-28" \
+		"$1"
+}
+
+githubApiPost()
+{
+	curl --fail --silent --show-error \
+		--request POST \
+		--header "Accept: application/vnd.github+json" \
+		--header "Authorization: Bearer $githubToken" \
+		--header "X-GitHub-Api-Version: 2022-11-28" \
+		--header "Content-Type: application/json" \
+		--data-binary "@$2" \
+		"$1"
+}
+
+userResponse="$submissionDirectory/github-user.json"
+githubApiGet "https://api.github.com/user" > "$userResponse"
+githubUser=$(sed -n \
+	's/^[[:space:]]*"login": "\([^"]*\)",*/\1/p' "$userResponse" | head -n 1)
+if [ -z "$githubUser" ]; then
+	echo "Could not determine the GitHub user for the supplied token." >&2
+	exit 1
+fi
+
+forkResponse="$submissionDirectory/github-fork.json"
+if ! githubApiGet "https://api.github.com/repos/$githubUser/haikuports" \
+	> "$forkResponse" 2>/dev/null; then
+	echo "Creating $githubUser/haikuports fork..."
+	forkRequest="$submissionDirectory/github-fork-request.json"
+	printf '{"default_branch_only":true}\n' > "$forkRequest"
+	githubApiPost "https://api.github.com/repos/haikuports/haikuports/forks" \
+		"$forkRequest" > "$forkResponse"
+
+	forkReady=false
+	attempt=0
+	while [ "$attempt" -lt 30 ]; do
+		if githubApiGet "https://api.github.com/repos/$githubUser/haikuports" \
+			> "$forkResponse" 2>/dev/null; then
+			forkReady=true
+			break
+		fi
+		attempt=$((attempt + 1))
+		sleep 2
+	done
+	if [ "$forkReady" != true ]; then
+		echo "The HaikuPorts fork was created but is not ready yet." >&2
+		echo "Wait a minute, then rerun the submission command." >&2
+		exit 1
+	fi
+fi
+
+existingPulls="$submissionDirectory/github-pulls.json"
+githubApiGet "https://api.github.com/repos/haikuports/haikuports/pulls?state=open&head=$githubUser:$branch" \
+	> "$existingPulls"
+if grep -q '"html_url"' "$existingPulls"; then
 	echo "A HaikuPorts pull request already exists for $githubUser:$branch." >&2
 	exit 1
 fi
 
-gh auth setup-git
+askpass="$submissionDirectory/git-askpass.sh"
+printf '%s\n' \
+	'#!/bin/sh' \
+	'case "$1" in' \
+	'  *Username*) printf "%s\\n" "x-access-token" ;;' \
+	'  *) printf "%s\\n" "$GITHUB_TOKEN" ;;' \
+	'esac' > "$askpass"
+chmod 700 "$askpass"
+
 git -C "$submissionTree" remote add fork \
 	"https://github.com/$githubUser/haikuports.git"
-git -C "$submissionTree" push --set-upstream fork "$branch"
+GITHUB_TOKEN=$githubToken GIT_ASKPASS=$askpass GIT_TERMINAL_PROMPT=0 \
+	git -C "$submissionTree" push --set-upstream fork "$branch"
 
-pullRequestUrl=$(gh pr create \
-	--repo haikuports/haikuports \
-	--base master \
-	--head "$githubUser:$branch" \
-	--title "haiku-apps/fatcat: add $releaseVersion" \
-	--body "Adds Fat Cat Pomodoro $releaseVersion, a native Haiku Pomodoro timer with a Deskbar add-on and animated cat break overlays. Built and tested locally on Haiku x86_64.")
+pullRequest="$submissionDirectory/github-pull-request.json"
+printf '{"title":"haiku-apps/fatcat: add %s","head":"%s:%s","base":"master","body":"Adds Fat Cat Pomodoro %s, a native Haiku Pomodoro timer with a Deskbar add-on and animated cat break overlays. Built and tested locally on Haiku x86_64."}\n' \
+	"$releaseVersion" "$githubUser" "$branch" "$releaseVersion" \
+	> "$pullRequest"
+pullResponse="$submissionDirectory/github-pull-response.json"
+githubApiPost "https://api.github.com/repos/haikuports/haikuports/pulls" \
+	"$pullRequest" > "$pullResponse"
+pullRequestUrl=$(sed -n \
+	's/^[[:space:]]*"html_url": "\([^"]*\)",*/\1/p' "$pullResponse" | head -n 1)
 
-if ! gh release view "$tag" --repo "$projectRepository" >/dev/null 2>&1; then
-	gh release create "$tag" \
-		--repo "$projectRepository" \
-		--verify-tag \
-		--title "Fat Cat Pomodoro $tag" \
-		--notes "Fat Cat Pomodoro $tag for Haiku."
+releaseResponse="$submissionDirectory/github-release.json"
+if ! githubApiGet \
+	"https://api.github.com/repos/$projectRepository/releases/tags/$tag" \
+	> "$releaseResponse" 2>/dev/null; then
+	releaseRequest="$submissionDirectory/github-release-request.json"
+	printf '{"tag_name":"%s","name":"Fat Cat Pomodoro %s","body":"Fat Cat Pomodoro %s for Haiku."}\n' \
+		"$tag" "$tag" "$tag" > "$releaseRequest"
+	githubApiPost "https://api.github.com/repos/$projectRepository/releases" \
+		"$releaseRequest" > "$releaseResponse"
+fi
+
+releaseId=$(sed -n \
+	's/^[[:space:]]*"id": \([0-9]*\),*/\1/p' "$releaseResponse" | head -n 1)
+if [ -z "$releaseId" ]; then
+	echo "Could not determine the GitHub release ID for $tag." >&2
+	exit 1
 fi
 
 packageName=$(basename "$package")
-if gh release view "$tag" --repo "$projectRepository" \
-	--json assets --jq '.assets[].name' | grep -Fxq "$packageName"; then
+if grep -F "\"name\": \"$packageName\"" \
+	"$releaseResponse" >/dev/null 2>&1; then
 	echo "Release asset already exists; leaving it unchanged: $packageName"
 else
-	gh release upload "$tag" "$package" --repo "$projectRepository"
+	uploadResponse="$submissionDirectory/github-upload.json"
+	curl --fail --silent --show-error \
+		--request POST \
+		--header "Accept: application/vnd.github+json" \
+		--header "Authorization: Bearer $githubToken" \
+		--header "X-GitHub-Api-Version: 2022-11-28" \
+		--header "Content-Type: application/octet-stream" \
+		--data-binary "@$package" \
+		"https://uploads.github.com/repos/$projectRepository/releases/$releaseId/assets?name=$packageName" \
+		> "$uploadResponse"
 fi
 
 echo "HaikuPorts pull request: $pullRequestUrl"
