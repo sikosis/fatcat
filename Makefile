@@ -8,7 +8,7 @@ APP_OBJECTS := $(APP_SOURCES:.cpp=.o)
 DESKBAR_OBJECT := src/DeskbarView.o
 LIBS := -lbe -ltranslation
 
-.PHONY: all clean install uninstall check test haiku-package
+.PHONY: all clean install uninstall check test haiku-package haikuports-submit
 
 all: $(NAME) $(CLI) FatCatDeskbar.so
 
@@ -58,6 +58,10 @@ uninstall:
 
 haiku-package:
 	sh scripts/build-haiku-package.sh
+
+haikuports-submit:
+	@test -n "$(VERSION)" || (echo "Usage: make haikuports-submit VERSION=0.17" >&2; exit 1)
+	sh scripts/submit-haikuports.sh "$(VERSION)"
 
 clean:
 	rm -f $(APP_OBJECTS) $(DESKBAR_OBJECT) $(NAME) $(CLI) FatCatDeskbar.so *.rsrc tests/session_test

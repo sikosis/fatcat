@@ -120,12 +120,14 @@ escapeReplacement()
 escapedHomepage=$(escapeReplacement "$homepage")
 escapedArchive=$(escapeReplacement "$archiveName")
 escapedChecksum=$(escapeReplacement "$checksum")
+escapedSourceFilename=$(escapeReplacement "$archiveName")
 escapedSourceDirectory=$(escapeReplacement "fatcat-$version")
 
 sed \
 	-e "s|@HOMEPAGE@|$escapedHomepage|g" \
 	-e "s|@SOURCE_URI@|file://$escapedArchive|g" \
 	-e "s|@CHECKSUM_SHA256@|$escapedChecksum|g" \
+	-e "s|@SOURCE_FILENAME@|$escapedSourceFilename|g" \
 	-e "s|@SOURCE_DIR@|$escapedSourceDirectory|g" \
 	"$recipeTemplate" > "$recipe"
 

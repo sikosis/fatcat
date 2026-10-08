@@ -83,6 +83,22 @@ copying them into HaikuPorts or building the package. The versioned recipe
 template is
 [`packaging/haikuports/fatcat-0.17.recipe.in`](packaging/haikuports/fatcat-0.17.recipe.in).
 
+After pushing a release tag, prepare and submit its public HaikuPorts recipe
+with GitHub CLI authentication:
+
+```sh
+make haikuports-submit VERSION=0.17
+```
+
+This downloads the tagged GitHub source archive, generates its public recipe,
+builds it in an isolated HaikuPorts checkout, creates or reuses your HaikuPorts
+fork, pushes a feature branch, opens the upstream pull request, creates the
+GitHub release when needed, and uploads the validated `.hpkg`. It never
+force-pushes or replaces an existing release asset.
+
+To generate and inspect the public recipe without building, pushing, or
+publishing anything, run `scripts/submit-haikuports.sh --prepare-only 0.17`.
+
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar
 add-on, documentation, and application-menu entry. The existing `make install`
 target remains available for development builds outside package management.
