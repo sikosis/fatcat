@@ -6,7 +6,7 @@ constexpr const char* kAppSignature = "application/x-vnd.sikosis-fatcat";
 constexpr const char* kDeskbarSignature
 	= "application/x-vnd.sikosis-fatcatDeskbar";
 constexpr const char* kAppName = "Fat Cat";
-constexpr const char* kAppVersion = "0.14";
+constexpr const char* kAppVersion = "0.15";
 constexpr const char* kAppDescription
 	= "A cozy Pomodoro timer that fills your breaks with collectible animated cats.";
 constexpr const char* kDeskbarItemName = "fatcatDeskbar";

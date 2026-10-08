@@ -1,4 +1,4 @@
-# Fat Cat Pomodoro v0.14 for Haiku
+# Fat Cat Pomodoro v0.15 for Haiku
 
 <p align="center">
   <img src="artwork/fatcat-icon.svg" alt="Fat Cat icon" width="128" height="128">
@@ -68,16 +68,20 @@ scripts/build-haiku-package.sh
 The script creates a local source archive and checksummed recipe in `dist/`,
 copies the recipe to `haiku-apps/fatcat` in the configured HaikuPorts tree,
 and invokes HaikuPorter. It reads `TREE_PATH` from
-`~/config/settings/haikuports.conf`, or you can specify the tree explicitly:
+`~/config/settings/haikuports.conf`, searches common checkout locations, or
+lets you specify the tree explicitly:
 
 ```sh
 HAIKUPORTS_TREE=/boot/home/haikuports scripts/build-haiku-package.sh
 ```
 
-Extra arguments are passed to HaikuPorter. Use `--prepare-only` to generate and
-validate the archive and recipe without copying them into HaikuPorts or
-building the package. The versioned recipe template is
-[`packaging/haikuports/fatcat-0.14.recipe.in`](packaging/haikuports/fatcat-0.14.recipe.in).
+If HaikuPorts or HaikuPorter is missing, the script offers to clone the official
+repository. Pass `--bootstrap` to accept that setup without prompts. Extra
+arguments after the script options are passed to HaikuPorter. Use
+`--prepare-only` to generate and validate the archive and recipe without
+copying them into HaikuPorts or building the package. The versioned recipe
+template is
+[`packaging/haikuports/fatcat-0.15.recipe.in`](packaging/haikuports/fatcat-0.15.recipe.in).
 
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar
 add-on, documentation, and application-menu entry. The existing `make install`
