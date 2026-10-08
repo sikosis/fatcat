@@ -37,7 +37,8 @@ fi
 
 recipeTemplate="$projectDirectory/packaging/haikuports/fatcat-$version.recipe.in"
 outputDirectory="$projectDirectory/dist"
-archive="$outputDirectory/fatcat-$version.tar.gz"
+archiveName="fatcat-$version.tar.gz"
+archive="$outputDirectory/$archiveName"
 recipe="$outputDirectory/fatcat-$version.recipe"
 
 if [ ! -f "$recipeTemplate" ]; then
@@ -117,7 +118,7 @@ escapeReplacement()
 }
 
 escapedHomepage=$(escapeReplacement "$homepage")
-escapedArchive=$(escapeReplacement "$archive")
+escapedArchive=$(escapeReplacement "$archiveName")
 escapedChecksum=$(escapeReplacement "$checksum")
 escapedSourceDirectory=$(escapeReplacement "fatcat-$version")
 
@@ -257,8 +258,9 @@ fi
 portDirectory="$haikuportsTree/haiku-apps/fatcat"
 mkdir -p "$portDirectory"
 cp "$recipe" "$portDirectory/fatcat-$version.recipe"
+cp "$archive" "$portDirectory/$archiveName"
 
-echo "Installed recipe in $portDirectory"
+echo "Installed recipe and local source archive in $portDirectory"
 (
 	cd "$haikuportsTree"
 	"$haikuporter" --config="$buildConfiguration" -S "$@" "fatcat-$version"
