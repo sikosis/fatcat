@@ -1,4 +1,4 @@
-# Fat Cat Pomodoro v0.16 for Haiku
+# Fat Cat Pomodoro v0.17 for Haiku
 
 <p align="center">
   <img src="artwork/fatcat-icon.svg" alt="Fat Cat icon" width="128" height="128">
@@ -81,7 +81,7 @@ arguments after the script options are passed to HaikuPorter. Use
 `--prepare-only` to generate and validate the archive and recipe without
 copying them into HaikuPorts or building the package. The versioned recipe
 template is
-[`packaging/haikuports/fatcat-0.16.recipe.in`](packaging/haikuports/fatcat-0.16.recipe.in).
+[`packaging/haikuports/fatcat-0.17.recipe.in`](packaging/haikuports/fatcat-0.17.recipe.in).
 
 The resulting package installs the application, sprites, `fatcat-cli`, Deskbar
 add-on, documentation, and application-menu entry. The existing `make install`

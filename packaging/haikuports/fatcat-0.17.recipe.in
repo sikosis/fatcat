@@ -28,9 +28,6 @@ BUILD_REQUIRES="
 BUILD_PREREQUIRES="
 	cmd:g++
 	cmd:make
-	cmd:mimeset
-	cmd:rc
-	cmd:xres
 	"
 
 BUILD()
