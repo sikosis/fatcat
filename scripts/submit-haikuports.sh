@@ -50,32 +50,99 @@ if [ ! -f "$recipeTemplate" ]; then
 	exit 1
 fi
 
-if ! git -C "$projectDirectory" ls-remote --exit-code --tags origin \
-	"refs/tags/$tag" >/dev/null 2>&1; then
-	echo "The tag $tag is not available from the Fat Cat origin remote." >&2
-	echo "Push the tag before submitting it to HaikuPorts." >&2
-	exit 1
-fi
+checksumFile()
+{
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$1" | awk '{print $1}'
+	elif command -v sha256 >/dev/null 2>&1; then
+		sha256 "$1" | awk '{print $NF}'
+	elif command -v shasum >/dev/null 2>&1; then
+		shasum -a 256 "$1" | awk '{print $1}'
+	else
+		echo "A SHA-256 utility (sha256sum, sha256, or shasum) is required." >&2
+		exit 1
+	fi
+}
+
+archiveIsValid()
+{
+	[ -s "$1" ] || return 1
+	tar -tzf "$1" >/dev/null 2>&1 || return 1
+	archiveRoot=$(tar -tzf "$1" 2>/dev/null | sed -n '1p')
+	[ "$archiveRoot" = "fatcat-$releaseVersion/" ]
+}
+
+downloadWithCurl()
+{
+	attempt=1
+	while [ "$attempt" -le 4 ]; do
+		echo "Downloading tagged source with curl (attempt $attempt of 4) ..."
+		if curl --fail --location --connect-timeout 15 --max-time 300 \
+			--output "$temporaryArchive" "$sourceUri"; then
+			return 0
+		fi
+		attempt=$((attempt + 1))
+		if [ "$attempt" -le 4 ]; then
+			sleep 2
+		fi
+	done
+	return 1
+}
+
+downloadWithWget()
+{
+	echo "curl could not download the archive; trying wget ..."
+	wget --timeout=15 --tries=4 --output-document="$temporaryArchive" \
+		"$sourceUri"
+}
 
 mkdir -p "$outputDirectory"
-if command -v curl >/dev/null 2>&1; then
-	curl --fail --location --output "$archive" "$sourceUri"
-elif command -v wget >/dev/null 2>&1; then
-	wget --output-document="$archive" "$sourceUri"
-else
-	echo "curl or wget is required to download the tagged source archive." >&2
-	exit 1
+useCachedArchive=false
+if [ -f "$archive" ] && [ -f "$publicRecipe" ]; then
+	cachedSourceUri=$(sed -n 's/^SOURCE_URI="\([^"]*\)"/\1/p' \
+		"$publicRecipe")
+	cachedChecksum=$(sed -n 's/^CHECKSUM_SHA256="\([^"]*\)"/\1/p' \
+		"$publicRecipe")
+	actualChecksum=$(checksumFile "$archive")
+	if [ "$cachedSourceUri" = "$sourceUri" ] \
+		&& [ "$cachedChecksum" = "$actualChecksum" ] \
+		&& archiveIsValid "$archive"; then
+		useCachedArchive=true
+		checksum=$actualChecksum
+		echo "Using verified cached tagged source archive: $archive"
+	fi
 fi
 
-if command -v sha256sum >/dev/null 2>&1; then
-	checksum=$(sha256sum "$archive" | awk '{print $1}')
-elif command -v sha256 >/dev/null 2>&1; then
-	checksum=$(sha256 "$archive" | awk '{print $NF}')
-elif command -v shasum >/dev/null 2>&1; then
-	checksum=$(shasum -a 256 "$archive" | awk '{print $1}')
-else
-	echo "A SHA-256 utility (sha256sum, sha256, or shasum) is required." >&2
-	exit 1
+if [ "$useCachedArchive" = false ]; then
+	if ! git -C "$projectDirectory" ls-remote --exit-code --tags origin \
+		"refs/tags/$tag" >/dev/null 2>&1; then
+		echo "The tag $tag could not be verified on the Fat Cat origin remote." >&2
+		echo "Check the network connection and confirm the tag was pushed." >&2
+		exit 1
+	fi
+
+	temporaryArchive="$archive.download.$$"
+	trap 'rm -f "$temporaryArchive"' EXIT HUP INT TERM
+	downloaded=false
+	if command -v curl >/dev/null 2>&1 && downloadWithCurl; then
+		downloaded=true
+	elif command -v wget >/dev/null 2>&1 && downloadWithWget; then
+		downloaded=true
+	fi
+
+	if [ "$downloaded" = false ]; then
+		echo "Unable to download $sourceUri after retries." >&2
+		echo "No verified cached archive was available; check DNS/network access and retry." >&2
+		exit 1
+	fi
+	if ! archiveIsValid "$temporaryArchive"; then
+		echo "The downloaded archive is invalid or has an unexpected top-level directory." >&2
+		exit 1
+	fi
+
+	checksum=$(checksumFile "$temporaryArchive")
+	mv "$temporaryArchive" "$archive"
+	trap - EXIT HUP INT TERM
 fi
 
 escapeReplacement()
