@@ -12,8 +12,10 @@ cat break scenes. It is a `BApplication` with a Deskbar add-on; no Qt, QML,
 Electron or other framework is used.
 
 During breaks, Fat Cat hides its settings window and places animated cats over
-a snapshot of the selected screen. Completing breaks unlocks new cats, while
-renaming and favourites let you make the sanctuary your own.
+a snapshot of the selected screen. ~~Completing breaks unlocks new cats, while
+renaming and favourites let you make the sanctuary your own.~~
+
+![Fat Cat Pomodoro break scene on Haiku](docs/screenshots/FatCat.png)
 
 ---
 
@@ -22,36 +24,36 @@ This project is a native Haiku recreation of
 bundled sprite sheets come from the MIT-licensed upstream project, whose
 copyright notice is retained in [LICENSE](LICENSE).
 
-**The goal is simple:** to make focus sessions productive and breaks delightful
+Hopefully, this app will make focus sessions **productive** and breaks **delightful**
 on Haiku.
 
-> Sikosis · **Designer and maintainer** · [GitHub](https://github.com/sikosis)
+> Sikosis · **Designer and Maintainer** · [GitHub](https://github.com/sikosis)
 
 ---
 
 ## Features
 
-- Focus, short-break, and long-break phases. Defaults are 25 minutes focus, 5 minutes short break, 15 minutes long break, and one long break after every 4 completed focus sessions.
-- Intense, Chill, Defaults, and Custom timer profiles.
-- A live Deskbar readout with the Fat Cat HVIF icon and responsive timer
-  controls. A green dot means the background service is responding; a grey
-  **Off** state means it stopped without a clean quit.
+- Focus, short-break and long-break phases. Defaults are 25 minutes focus, 5 minutes short break, 15 minutes long break and one long break after every 4 completed focus sessions.
+- Intense, Chill, Defaults and Custom timer profiles.
+- A live Deskbar readout with the Fat Cat icon and responsive timer
+  controls.  
+  - A green dot means the background service is responding;
+  - a grey **Off** state means it stopped without a clean quit.
 - A background application that keeps working when its settings window closes.
 - Persistent, suspend-aware timers. Paused timers, interval progress, settings,
-  collection progress, names, and favourites survive restarts.
+  collection progress, names and favourites survive restarts.
 - Four cats with distinct personalities and six activities: walk, stretch,
-  groom, yawn, loaf, and sleep.
+  groom, yawn, loaf and sleep.
 - Cat unlocks that match the original: Mochi immediately, Miso after 1 completed
-  break, Patches after 3, and Pepper after 6.
-- Cat renaming, favourites, screen selection, reduced motion, and a no-streak
+  break, Patches after 3 and Pepper after 6.
+- Cat renaming, favourites, screen selection, reduced motion and a no-streak
   collection model.
 - Full-screen break scenes with a compact control panel near the Deskbar.
   Escape and **Skip break** dismiss a break; previews and skipped breaks never
   earn progress.
-- Bounded clock-change handling, atomic state writes, and predictable recovery
+- Bounded clock-change handling, atomic state writes and predictable recovery
   after sleep or an overdue interval.
-- An original cat-and-Pomodoro HVIF icon embedded in the application, Deskbar
-  add-on, and native About box.
+- An original cat-and-Pomodoro HVIF icon!
 
 ---
 
